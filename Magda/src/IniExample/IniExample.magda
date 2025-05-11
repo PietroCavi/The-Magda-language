@@ -11,7 +11,7 @@ mixin MyMixin of Object =
     
 		// These kind of calls cannot be done inside an
 		// ini module due a Magda known bug:
-		// value := 0;
+        // value := 0;
 		// this.MyMixin.setValue(0);
 		// "test".String.print();
 

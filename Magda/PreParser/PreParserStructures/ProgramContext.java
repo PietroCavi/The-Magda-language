@@ -113,6 +113,10 @@ public class ProgramContext{
 
     }
 
+    public String getIniModuleName(String mixinName, ArrayList<String> params){
+        return programContext.get(mixinName).getIniModuleName(params);
+    }
+
     public String getFieldType(String mixinName,String fieldName){
         return programContext.get(mixinName).getFieldType(fieldName);
     }     

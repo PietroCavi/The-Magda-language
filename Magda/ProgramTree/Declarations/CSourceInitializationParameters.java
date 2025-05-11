@@ -27,6 +27,15 @@ public class CSourceInitializationParameters extends CProgramElemVector<CSourceI
         
         return false;
     }
+
+    public ArrayList<String> getParamNames(){
+        ArrayList<String> ret = new ArrayList<String>();
+
+        for(CSourceInitializationParameter param : this)
+            ret.add(param.ParName);
+
+        return ret;
+    }
                 
     public void CheckTypes( CMethodEnvironment env)  throws CTypeError { 
         for (int i=0; i<size(); i++)

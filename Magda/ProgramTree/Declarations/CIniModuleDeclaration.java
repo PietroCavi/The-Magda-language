@@ -61,7 +61,7 @@ public class CIniModuleDeclaration  implements IProgramElem{
                 continue;
             throw new CTypeError("Output parameter  [" + par.MixinName+"."+ par.ParName+"] does not refer to any another module declaration");
         }
-          
+        /*          
         for (int i=0; i< env.CurrentMixin.IniModules.size(); i++){ 
             CIniModuleDeclaration mod =env.CurrentMixin.IniModules.get(i);
             if (mod != this)
@@ -70,6 +70,7 @@ public class CIniModuleDeclaration  implements IProgramElem{
                         throw new CTypeError("Input parameter "+InputParams.get(j).MixinName +"."+InputParams.get(j).ParName+ " is declared in two different modules");
               
         }
+        */
     }
 
     public void GenCode (java.io.PrintStream o, CMethodEnvironment env, CGenCodeHelper h){ 	

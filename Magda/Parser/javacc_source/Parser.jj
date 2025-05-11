@@ -1240,7 +1240,7 @@ CIniModuleSuperInstruction ModuleSuperCall():
     <SUPER> "[" params=ActualInitializationOfParams() "]" ";" {return new CIniModuleSuperInstruction(params);}
 }
 
-CIniModuleBody IniModuleBody(String mixinname):
+CIniModuleBody IniModuleBody(String mixinname,String methodname):
 { 
     CVariableDeclarations vars;
     CInstructions instrs, instrs2;
@@ -1252,9 +1252,9 @@ CIniModuleBody IniModuleBody(String mixinname):
     )
   
     <BEGIN>
-        instrs  = Instructions()
+        instrs  = InstructionsContext(mixinname,methodname)
         instr   = ModuleSuperCall()
-        instrs2 = Instructions()
+        instrs2 = InstructionsContext(mixinname,methodname)
     <END>
     
     { 
@@ -1270,16 +1270,18 @@ CIniModuleDeclaration IniModuleDeclaration(String mixinname):
     Token MixinName;
     CSourceInitializationParameters input, output;
     CIniModuleBody Body;
-  
+
+    String methodname; 
+ 
     int LineNo = getToken(1).beginLine;
     boolean isRequired;
 }
 { 
     ( <REQUIRED> {isRequired=true;} | <OPTIONAL> {isRequired=false;} ) MixinName = <ID> 
-    input = InputInitializationParameters(MixinName.image) <INITIALIZES> 
+    input = InputInitializationParameters(MixinName.image){methodname = programContext.getIniModuleName(mixinname,input.getParamNames());}<INITIALIZES> 
     output = OutputInitializationParameters()
 
-    Body = IniModuleBody(mixinname)
+    Body = IniModuleBody(mixinname,methodname)
 
     { return new CIniModuleDeclaration(isRequired, MixinName.image, input, output, Body, LineNo, FileName);}
  
@@ -1378,6 +1380,10 @@ IDeclaration MixinDeclaration():
     <MIXIN> mixinname= <ID> ["<" polyPars = PolymorphismParams() ">"] <OF>  expr = MixinExpressionOrVoid()  "="
         ( 
             ( 
+                iniModule = IniModuleDeclaration(mixinname.image) {iniModules.add(iniModule);}
+                
+                |                
+
                 fld = FieldDeclaration() {flds.add(fld);}
                 
                 |
@@ -1387,10 +1393,7 @@ IDeclaration MixinDeclaration():
                 |
         
                 newmtd = NewMethodDeclaration(mixinname.image) {newmtds.add(newmtd);}
-                
-                |
            
-                iniModule = IniModuleDeclaration(mixinname.image) {iniModules.add(iniModule);}
            ) ";"
         ) *
     <END> 

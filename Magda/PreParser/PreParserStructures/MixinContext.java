@@ -4,14 +4,39 @@ import java.util.HashMap;
 import java.util.ArrayList;
 
 public class MixinContext{
+
+    private int counter = 0;    
+
     private HashMap<String,MethodContext> methodsContext = new HashMap<String,MethodContext>();
     private HashMap<String,String> fields = new HashMap<String,String>();
+ 
+    private HashMap<ArrayList<String>,String> iniModulesNameSpace = new HashMap<ArrayList<String>,String>();
 
     private ArrayList<String> linkedMixins = new ArrayList<String>();
 
     public void addMethod(String name, MethodContext methodContext){
         methodsContext.put(name,methodContext);
     } 
+
+    public String getIniModuleName(ArrayList<String> params){
+        return iniModulesNameSpace.get(params);
+    }
+
+    public String addIniModule(ArrayList<String> params, MethodContext methodContext){
+        for(ArrayList<String> allParams : iniModulesNameSpace.keySet()){
+            for(String s : params){
+                if(allParams.contains(s))
+                    return s;
+            }
+        }
+
+        String iniModuleName = "initialize " + (counter++);
+        
+        iniModulesNameSpace.put(params,iniModuleName);
+        methodsContext.put(iniModuleName,methodContext);
+
+        return null;
+    }
 
     public boolean containsMethod(String methodName){
         if(methodsContext.containsKey(methodName))

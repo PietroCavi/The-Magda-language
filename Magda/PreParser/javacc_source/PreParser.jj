@@ -16,6 +16,7 @@ PARSER_BEGIN(PreParser)
     import Magda.ProgramTree.Expressions.*;
     import Magda.ProgramTree.*;
     import Magda.Compiler.*;
+    import java.util.ArrayList;
 
     public class PreParser {
         String FileName;
@@ -660,25 +661,25 @@ void FieldDeclaration(MixinContext mixCont):
     } 
 }
 
-CSourceInitializationParameter InputInitializationParameter(String MixinName):
+String InputInitializationParameter():
 { 
-    Token ParamName; 
+    Token ParamName1,ParamName2; 
     IMixinExpression Type;
 }
 { 
-    ParamName =<ID> ":" Type = MixinExpression()
-    { return new CSourceInitializationParameter(  MixinName, ParamName.image, Type ); }
+    ParamName1 =<ID> ":" ParamName2 = <ID>
+    { return ParamName1.image+":"+ParamName2.image; }
 }
 
-CSourceInitializationParameters  InputInitializationParameters(String MixinName):
+ArrayList<String> InputInitializationParameters():
 { 
-    CSourceInitializationParameter par;
-    CSourceInitializationParameters list = new CSourceInitializationParameters();
+    String par;
+    ArrayList<String> list = new ArrayList<String>();
 }
 { 
     "(" 
-    [ par = InputInitializationParameter(MixinName) { list.add (par); }
-        (";" par = InputInitializationParameter(MixinName) { list.add (par); }
+    [ par = InputInitializationParameter() { list.add (par); }
+        (";" par = InputInitializationParameter() { list.add (par); }
         )* 
     ]
     ")"
@@ -782,7 +783,7 @@ CIniModuleSuperInstruction ModuleSuperCall():
     <SUPER> "[" params=ActualInitializationOfParams() "]" ";" {return new CIniModuleSuperInstruction(params);}
 }
 
-CIniModuleBody IniModuleBody():
+CIniModuleBody IniModuleBody(MethodContext methCont):
 { 
     CVariableDeclarations vars = null;
     CInstructions instrs, instrs2;
@@ -790,7 +791,7 @@ CIniModuleBody IniModuleBody():
 }
 { 
     ( 
-        localVariablesDeclaration(new MethodContext()) 
+        localVariablesDeclaration(methCont) 
     )
   
     <BEGIN>
@@ -807,23 +808,50 @@ CIniModuleBody IniModuleBody():
 }
 
 
-CIniModuleDeclaration IniModuleDeclaration():
+void IniModuleDeclaration(MixinContext mixCont,String mixinname):
 { 
     Token MixinName;
-    CSourceInitializationParameters input, output;
+    ArrayList<String> input;
+    CSourceInitializationParameters output;
     CIniModuleBody Body;
+
   
+
     int LineNo = getToken(1).beginLine;
     boolean isRequired;
+    
+    MethodContext methCont = new MethodContext();
 }
 { 
     ( <REQUIRED> {isRequired=true;} | <OPTIONAL> {isRequired=false;} ) MixinName = <ID> 
-    input = InputInitializationParameters(MixinName.image) <INITIALIZES> 
+    input = InputInitializationParameters() { 
+    
+        ArrayList<String> inputVarName = new ArrayList<String>();
+        ArrayList<String> inputVarType = new ArrayList<String>();
+        
+        String[] spl = new String[2];
+        for(String s : input){
+            spl = s.split(":");
+            inputVarName.add(spl[0]);
+            inputVarType.add(spl[1]);
+        }
+        
+        String err = mixCont.addIniModule(inputVarName,methCont);
+        if(err != null){
+            throw new Error("Input parameter "+ mixinname+"."+err+ " is declared in two different modules -> Line:"+LineNo);
+        }
+        
+        for(int i=0;i<inputVarName.size();i++)
+            methCont.addParam(inputVarName.get(i),inputVarType.get(i));
+        
+        methCont.setResType(mixinname); 
+
+    } <INITIALIZES> 
     output = OutputInitializationParameters()
 
-    Body = IniModuleBody()
+    Body = IniModuleBody(methCont)
 
-    { return new CIniModuleDeclaration(isRequired, MixinName.image, input, output, Body, LineNo, FileName);}
+    { return; }
  
 }
 
@@ -955,7 +983,7 @@ void MixinDeclaration(ProgramContext progCont):
                 
                 |
            
-                iniModule = IniModuleDeclaration() {iniModules.add(iniModule);}
+                IniModuleDeclaration(res,mixinname.image) { }
            ) ";"
         ) *
     <END> 
@@ -998,7 +1026,7 @@ ProgramContext IncludedDeclarations():
 }
 
 ProgramContext GlobalDeclarations():
-{ 
+{
     ProgramContext result = new ProgramContext();
     ProgramContext decls = null;
     IDeclaration decl;
