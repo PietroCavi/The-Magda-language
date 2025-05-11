@@ -7,15 +7,22 @@ public class CIdentifierExpression implements IExpression{
     private static final long serialVersionUID = 1L;
   
     public String Name;
+    public String typeString;    
+
+    public CIdentifierExpression(String aName, String aTypeString){
+        Name = aName;
+        typeString = aTypeString;
+    }
 
     public CIdentifierExpression(String aName){
         Name = aName;
+        typeString = "Integer";
     }
 
     public void print(java.io.PrintStream o){
         o.print("ID:"+Name);
     }
-
+    
     public CType GetType (CInstrEnvironment env){
         CType res = env.findParamOrVariableType(Name);
         if (res == null) {
@@ -31,7 +38,7 @@ public class CIdentifierExpression implements IExpression{
     public String GetTypeString (){
         // System.out.println("// CIdentifierExpression.Name=" + Name);
         // System.out.println("// CIdentifierExpression.GetTypeString()->empty");
-        return ("Integer");   // as default arithmetci operations about Integers
+        return typeString;   // as default arithmetci operations about Integers
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){

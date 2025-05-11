@@ -2,7 +2,7 @@ include "Magdalib/library.magda";
 
 mixin MyMixin of Object =
   value: Integer;
-  
+   
   required MyMixin() initializes ()
   begin
     
@@ -14,7 +14,7 @@ mixin MyMixin of Object =
 		// value := 0;
 		// this.MyMixin.setValue(0);
 		// "test".String.print();
-		
+
 		// Working calls should be like these:
 		// value := v;
 		// this.MyMixin.setValue(v);

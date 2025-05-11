@@ -1,4 +1,4 @@
-1. Somma tra Float e String con valori costanti da entrambe le parti
+1. Somma tra Float e String con valori costanti da entrambe le parti   //DONE
 
 2. Valori costanti negli iniModules
 
@@ -12,25 +12,23 @@
 
 7. Rendere più sintatticamente digestibile l'output MagdaProgram.java
 
-8. Verificare il funzionamento del plugin di Eclipse
+8. Verificare il funzionamento del plugin di Eclipse //NON NECESSARIO PER ORA
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-9. Boolean, Integer, Float, Byte come Mixin nativi anzichè come libreria
+9. Boolean, Integer, Float, Byte come Mixin nativi anzichè come libreria //NON UNA BUONA IDEA
 
 10. Gli iniModules sono un po' incasinati
 
 11. Forzare la specificazione del Mixin solo in caso di ambiguità effettiva con un opportuno warning in fase di compilazione
 
-12. Porting su OCaml pericoloso visto il grosso appoggio che Magda fa su Java
+12. Porting su OCaml pericoloso visto il grosso appoggio che Magda fa su Java //FARE RICERCA PER PARLARNE
 
 13. Implementazione con le Lambda espressioni dei CMagdaMethod //DONE
 
 
 
 Nell'immediato
-
-1. Somma tra Float e String con valori costanti da entrambe le parti
 
 2. Valori costanti negli iniModules
 
@@ -112,6 +110,229 @@ quindi i package Compiler, mtj e ProgramTree (quest'ultimo con tutti i sotto-pac
 MixinExpressions)
 
 /*----------------------------------------------------------------------------------------------------*/
+
+Log5 26/03/2025 - 03/04/2025
+
+Negli ultimi giorni ho fatto un grosso lungo lavoro di comprensione che mi ha permesso di capire il grosso della struttura del compiler, quindi ho
+potuto iniziare a risolvere i vecchi problemi e ho creato una base per quelli nuovi, il tutto preservando il veccio codice così da poter "staccare"
+le mie modifiche se non andassero bene senza modificare troppo il codice.
+
+Esattamente cosa ho risolto? Beh, nella vecchia versione di Magda non si potevano sommare tra di loro 2 variabili che non fossero 2 int, però
+si poteva sommare una variabile con una costante, per fare degli esempi:
+
+    1 + 1             --> OK
+    1.0 + 1.0         --> OK
+    "hello" + "wolrd" --> OK
+    x + 1             --> OK
+    x + 1.0           --> OK
+    "a" + x           --> OK
+    x + y             --> OK solo se x e y sono di tipo "Integer" altrimenti NO
+    this.Mix.x + y    --> OK solo se this.Mix.x e y sono di tipo "Integer" altrimenti NO
+    x + y.Mix.fun()   --> OK solo se x è di tipo "Integer" e la funzione fun() ritorna un "Integer", altrimenti NO
+
+C'è un motivo per cui non funziona, ed è anche relativamente semplice da capire, il compiler non ha la minima idea del tipo di variabili, field, metodi,
+nulla, non ha realmente idea di nulla, perchè trova solo degli ID, a prima vista non capivo, perchè in teoria il compiler fa un controllo dei tipi dopo
+aver parsato e solo quando ha finito genera il codice, quindi vediamo step by step cosa accade.
+
+    il compiler legge:
+
+        x + y
+
+    assumiamo che x ed y siano 2 istanze di Float
+    il parser crea 2 oggetti CIdentifierExpression sulla base di x ed y, la classe CIdentifierExpression implementa IExpression e quindi avrà un metodo
+    chiamato GetTypeString() che ci ritorna il presunto tipo di x e y
+
+    A Questo punto il parser genera una CBinaryExpressionAdd che prende come argomento i due CIdentifierExpression dichiarati sopra.
+    Semplificando i passaggi vado a dire che voglio applicare il metodo "add" alle variabili x ed y, che sono degli oggetti di tipo...
+    
+    Integer!?
+
+    Ebbene si, il metodo GetTypeString() ritorna la stringa "Integer" di default, ma d'altra parte non c'era un modo effettivo nella vecchia di versione
+    per dedurre in fase di parsing il tipo.
+    In seguito in fase di type-checking avrei ricevuto un errore, in quanto secondo il nostro compiler starei cercando di sommare 2 Float con il metodo
+    di add della classe Integer.
+
+    Guadando l'interfaccia GetType ci si potrebbe chiedere se al posto di utilizzare il *pericoloso* GetTypeString() non potremmo usare il più
+    rassicurante GetType(), purtroppo GetType() ha bisogno di un oggetto di tipo CInstrEnvironment che viene generato solamente in fase di type
+    checking.
+
+Ora ragioniamo sulle possibili difficoltà e sulla strategia che ho adottato per risolvere il problema:
+    Innanzitutto che informazioni mi servono? 
+        Mi sarebbe utile sapere i tipi delle mie IExpression, in particolare le variabili, i field e i return dei metodi
+    Perchè?
+        Così da poter sapere in fase di Parsing di che tipo sono le variabili,field e method-call così da poter applicare i metodi giusti al posto
+        giusto
+    Come posso fare?
+        Una struttura abbastanza ibrida tra una HashMap e un albero da poter consultare in fase di Parsing
+    Quando devo creare questa struttura?
+        Necessariamente prima del Parsing, purtroppo non posso farlo allo stesso momento, perchè potrei stai analizzando un metodo in un Mixin che fa
+        riferimento ad un altro metodo in un altro mixin che non ho ancora parsato
+
+Visto ciò che ho scritto nel paragrafo precedente ho realizzato un PreParser che viene lanciato prima del Parser e crea una struttura dei tipi del
+programma (ma non delle istruzioni che lo compongono), ecco un pezzo del toString() di questa struttura: 
+
+    Parsed mixins:
+    [Comparable, String, ByteVector, Integer, Float, Mix1, Mix2, MainClass, Mix3, Byte, Vec3, Object, Boolean, Vector]
+
+    Mixin : Comparable
+      [Object]
+        fields:
+        methods:
+            leq : Boolean
+                params:
+                    other : t
+                variables:
+            less : Boolean
+                params:
+                    other : t
+                variables:
+    Mixin : Integer
+      [Comparable]
+        fields:
+        methods:
+            add : Integer
+                params:
+                    other : Integer
+                variables:
+                    res : Integer
+            sub : Integer
+                params:
+                    other : Integer
+                variables:
+                    res : Integer
+            Comparable.less : Boolean
+                params:
+                    other : Integer
+                variables:
+                    res : Boolean
+            print : Object
+                params:
+                variables:
+            Comparable.leq : Boolean
+                params:
+                    other : Integer
+                variables:
+                    res : Boolean
+            toFloat : Float
+                params:
+                variables:
+                    res : Float
+            divide : Integer
+                params:
+                    other : Integer
+                variables:
+                    res : Integer
+            multiply : Integer
+                params:
+                    other : Integer
+                variables:
+                    res : Integer
+            Object.equals : Boolean
+                params:
+                    other : Object
+                variables:
+                    res : Boolean
+            Object.neq : Boolean
+                params:
+                    other : Object
+                variables:
+                    res : Boolean
+
+
+questa struttura viene poi passata al Parser che la utilizza per sapere i tipi degli oggetti così da poter applicare il metodo operazionale corretto.
+
+Collegare la struttura dati al Parser non è stato facilissimo, questo perchè per interrogare la struttura dati ho bisogno di sapere in quale Mixin mi
+trovo e in certi casi (per le variabili) anche in che metodo mi trovo al momento del parsing, perciò ho deciso di propagare questa informazione
+ricorsivamente all'interno del Parser tramite Stringhe, che poi utilizzo come chiavi sostanzialmente per trovare il tipo delle mie variabili/field/
+method-call.
+
+Il problema è risolto!
+
+Vediamo ora 2 effetti collaterali, uno sicuramente utile, e uno potenzialmente non nocivo e soprattutto nel caso facilissimo da risolvere
+Partiamo da quello utile:
+    Avendo una struttura dati del genere sarà relativamente semplice introdurre il disambiguamento di metodi e filed per quanto
+    riguarda le chimate a metodi e le reference ai field, facciamo un piccolissimo esempio pratico
+
+        mixin Mix1 of Object =
+        
+            num:Integer;
+
+            new void print()
+            begin
+
+                this.Mix1.num.Integer.print();
+
+            end;
+
+        end;
+
+    Una scrittura più intuitiva potrebbe essere this.num.print(), Magda ci impone di scrivere this.Mix1.num.Integer.print(), questo perchè 
+    Mix1 potrebbe essere composto da altri mixin che contengono un'altro field chiamato num, e ancora, Integer potrebbe contenere altri
+    mixin che contengono metodi di print().
+    Però se non ci fossero ambiguità in un certo caso? Potrei omettere la specificazione eccessiva e ridurre la verbosità, e questa struttura mi
+    aiuterebbe tantissimo a risolvere questo problema, ma ne parlerò di più in futuro
+
+Ora passiamo all'effetto collaterale non nocivo:
+    Ho introdotto l'operator overloading, come ho già datto toglierlo sarebbe facile, ma in questo momento qualsiasi mixin che implementa i
+    metodi add,sub,multiply e divide nel modo corretta inteso dal type-checker può utilizzare i simboli + - * /
+    In passato ho lavorato con dei vettori e avere l'operator Overloading mi avrebbe fatto comodo, in generale è una feature molto carina e
+    per questo l'ho tenuta, ma si può togliere con 12 righe di codice, quindi molto molto velocemente
+
+
+
+EXTRA:
+
+Lo aggiungo come extra perchè non è minimamente rilevante al funzionamente del Compiler, ma ho creato 2 plugins molto piccoli, rispettivamente uno per 
+VsCode e uno per Vim che introducono l'highlight della sintassi dei file .magda, non è niente di sofisticato, solo dei semplici colori.
+Tuttavia non avevo la minima idea di come si facesse, e quinsi mi ha preso comunque un po' di tempo, per il plugin di VsCode ho letto la documentazione
+e l'ho creato con l'aiuto del package npm "yo code" che ha creato lo scheletro dell'estensione e poi io ho scritto la TextMateGrammar in JSON.
+Per vim invece ho preso il file che introduce l'highlight della sintassi per il linguaggio C e l'ho modificato per i miei bisogni.
+ 
+Funzionano e anche se non sembra aiutano parecchio lo sviluppo e la leggibilità del codice Magda!
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log6 05/04/2025
+
+Controllare la non-ciclicità dei Mixin
+
+Controllare la non ambiguità di metodi e field
+    putroppo dovrò creare dei nuovi metodi del parser, specialmente per i this, dovrò passare il mixinname del context in cui mi trovo!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

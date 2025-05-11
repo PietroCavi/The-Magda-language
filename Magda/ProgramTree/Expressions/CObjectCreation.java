@@ -28,7 +28,7 @@ public class CObjectCreation implements IExpression{
         //
         return MixinExpr.GetType(env);
     }
-
+    
     public String GetTypeString (){
         // System.out.println("// CObjectCreation.GetTypeString()->empty");
         return ("Integer");   // as default arithmetci operations about Integers

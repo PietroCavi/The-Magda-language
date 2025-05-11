@@ -1,0 +1,5 @@
+mixin Additionable <s <= Additionable> of Object =
+
+abstract Boolean sas(other:s);
+
+end;

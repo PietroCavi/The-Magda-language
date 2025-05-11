@@ -10,20 +10,29 @@ public class CFieldSelectExpression implements IExpression{
     public IExpression SelectTarget;
     String MixinName;
     String FieldName;
+    public String typeString;    
+    
+    public CFieldSelectExpression (IExpression aSelectTarget, String aMixinName, String aFieldName, String aTypeString){
+        SelectTarget = aSelectTarget;
+        MixinName = aMixinName;
+        FieldName = aFieldName;
+        typeString = aTypeString;
+    }
 
     public CFieldSelectExpression (IExpression aSelectTarget, String aMixinName, String aFieldName){
         SelectTarget = aSelectTarget;
         MixinName = aMixinName;
         FieldName = aFieldName;
+        typeString = "Integer";
     }
 
     public CType GetType (CInstrEnvironment env){
         return env.getMixin(MixinName).getFieldParamType(env, FieldName);
     }
-
+    
     public String GetTypeString (){
         // System.out.println("// CFieldSelectExpression.GetTypeString()->empty");
-        return ("Integer");   // as default arithmetci operations about Integers
+        return typeString;   // as default arithmetci operations about Integers
     }
 
     public void print(java.io.PrintStream o){

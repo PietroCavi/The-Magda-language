@@ -16,7 +16,7 @@ public class CByteLiteral implements IExpression{
     public void print(java.io.PrintStream o){
         o.print(" byte:<"+Byte.toString(Value)+">");
     }
-
+    
     public CType GetType (CInstrEnvironment env){
         return (new CMixinExpressionIdentifier("FullByte")).GetType(env) ;
     }

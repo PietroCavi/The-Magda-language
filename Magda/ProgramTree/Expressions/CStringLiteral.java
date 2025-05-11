@@ -20,7 +20,7 @@ public class  CStringLiteral implements IExpression{
     public CType GetType (CInstrEnvironment env){
         return CType.createCType(env, env.getMixin("String") );
     }
-
+    
     public String GetTypeString (){
         return ("String");
     }

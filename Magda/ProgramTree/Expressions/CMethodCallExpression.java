@@ -8,17 +8,28 @@ import java.util.*;
 public class CMethodCallExpression implements IExpression{ 
     
     private static final long serialVersionUID = 1L;
+
+    public String typeString;
     
     public IExpression MethodTarget;
     String MixinName;
     String MethodName;
     CExpressionList Params;
+    
+    public CMethodCallExpression (IExpression aMethodTarget, String aMixinName, String aMethodName, CExpressionList aparams,String aTypeString){ 
+        MethodTarget = aMethodTarget;
+        MixinName = aMixinName;
+        MethodName = aMethodName;
+        Params  = aparams;
+        typeString = aTypeString;
+    }
 
     public CMethodCallExpression (IExpression aMethodTarget, String aMixinName, String aMethodName, CExpressionList aparams){ 
         MethodTarget = aMethodTarget;
         MixinName = aMixinName;
         MethodName = aMethodName;
         Params  = aparams;
+        typeString = "Integer";
     }
 
     public void print(java.io.PrintStream o){ 
@@ -45,7 +56,7 @@ public class CMethodCallExpression implements IExpression{
 
     public String GetTypeString (){
         // System.out.println("// CMethodCallExpression.GetTypeString()->empty");
-        return ("Integer");   // as default arithmetci operations about Integers
+        return typeString; // as default arithmetci operations about Integers
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  

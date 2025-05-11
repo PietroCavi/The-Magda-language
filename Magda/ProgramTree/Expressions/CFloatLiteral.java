@@ -16,7 +16,7 @@ public class CFloatLiteral implements IExpression{
     public CType GetType (CInstrEnvironment env){
         return (new CMixinExpressionIdentifier("FullFloat")).GetType(env) ;
     }
-
+    
     public String GetTypeString (){
         return ("Float");
     }

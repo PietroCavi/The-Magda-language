@@ -9,8 +9,11 @@ public class CSuperCallExpression implements IExpression{
   
     CExpressionList Params;
 
+    public String typeString;
+
     public CSuperCallExpression (CExpressionList aparams){ 
         Params = aparams;
+        typeString = "Integer";
     }
 
     public CType GetType (CInstrEnvironment env){ 
@@ -24,10 +27,10 @@ public class CSuperCallExpression implements IExpression{
         //
         return env.currentMethod.getResultType(env);
     }
-
+    
     public String GetTypeString (){
         // System.out.println("// CSuperCallExpression.GetTypeString()->empty");
-        return ("Integer");   // as default arithmetci operations about Integers
+        return typeString;   // as default arithmetci operations about Integers
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  

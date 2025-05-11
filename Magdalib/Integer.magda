@@ -1,4 +1,4 @@
-let FullInteger = Comparable, Integer, where Comparable.t := (Comparable, Integer);
+let FullInteger = Comparable, Integer;
 
 mixin Integer of Comparable, where  Comparable.t := (Comparable, Integer) =
 

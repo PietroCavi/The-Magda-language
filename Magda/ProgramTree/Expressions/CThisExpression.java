@@ -5,7 +5,17 @@ import Magda.ProgramTree.*;
 public class CThisExpression implements IExpression{
     
     private static final long serialVersionUID = 1L;
+
+    public String typeString;
     
+    public CThisExpression(String aTypeString){
+        typeString = aTypeString;
+    }    
+
+    public CThisExpression(){
+        typeString = "Integer";
+    }    
+
     public void print(java.io.PrintStream o){ 
         o.print("this");
     }
@@ -16,10 +26,10 @@ public class CThisExpression implements IExpression{
      
         return env.CurrentMixin.GetType(env);
     }
-
+    
     public String GetTypeString (){
         // System.out.println("// CThisExpression.GetTypeString()->empty");
-        return ("Integer");   // as default arithmetci operations about Integers
+        return typeString;   // as default arithmetci operations about Integers
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  

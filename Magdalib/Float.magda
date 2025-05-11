@@ -1,6 +1,6 @@
 let FullFloat = Comparable, Float;
 
-mixin Float of Comparable, where Comparable.t := (Comparable, Float) =
+mixin Float of Object,Comparable, where Comparable.t := (Comparable, Float) =
 
   new Float add (other:Float)
     res:Float;

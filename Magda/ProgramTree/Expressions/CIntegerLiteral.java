@@ -20,7 +20,7 @@ public class CIntegerLiteral implements IExpression{
     public CType GetType (CInstrEnvironment env){
         return (new CMixinExpressionIdentifier("FullInteger")).GetType(env) ;
     }
-
+    
     public String GetTypeString (){
         return ("Integer");
     }

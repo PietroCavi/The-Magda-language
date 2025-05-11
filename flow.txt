@@ -1,3 +1,29 @@
+include "Magdalib/Object.magda";
+include "Magdalib/Boolean.magda";
+include "Magdalib/Integer.magda";
+include "Magdalib/Comparable.magda";
+include "Magdalib/Float.magda";
+
+mixin MainClass of Object = 
+    
+    new void mainProgram()
+    
+        k : Integer;   
+
+    begin
+
+        k := 1;    
+        k := k+k;
+    
+        k.Integer.print();
+
+    end;
+end;
+
+(new MainClass[]).MainClass.mainProgram();
+
+//////////////////////////////////////////////////////////
+
 Creo un CProgram, che è il punto iniziale, il CProgram prende in argomento 2 campi, un CGlobalDeclaration e un CInstructions,
 Questi sono rispettivamente una lista di IDeclaration e di IInstruction, per capirci le IDeclaration sono tutte le dichiarazioni di
 strutture complesse, infatti le IDeclarations spessissimo contengono al loro interno delle IInstruction, CInstructions invece

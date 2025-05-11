@@ -6,12 +6,15 @@ import Magda.ProgramTree.MixinExpressions.*;
 public class CBinaryExpressionStrongEqual implements IExpression{
     
     private static final long serialVersionUID = 1L;
-  
+
+    public String typeString; 
+ 
     IExpression Left, Right;
 
     public CBinaryExpressionStrongEqual (IExpression aLeft, IExpression aRight){
         Left = aLeft;
         Right = aRight;
+        typeString = "Integer";
     }
 
     public void print(java.io.PrintStream o){
@@ -30,7 +33,7 @@ public class CBinaryExpressionStrongEqual implements IExpression{
 
     public String GetTypeString (){
         // System.out.println("// CBinaryExpressionStrongEqual.GetTypeString()->empty");
-        return ("Integer");   // as default arithmetci operations about Integers
+        return typeString;   // as default arithmetci operations about Integers
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){

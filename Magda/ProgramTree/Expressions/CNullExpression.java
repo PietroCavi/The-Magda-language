@@ -13,7 +13,7 @@ public class CNullExpression implements IExpression{
     public CType GetType (Magda.Compiler.CInstrEnvironment env){ 
         return CType.createCType(true);
     }
-
+    
     public String GetTypeString (){
         // System.out.println("// CNullExpression.GetTypeString()->empty");
         return ("Integer");   // as default arithmetci operations about Integers
