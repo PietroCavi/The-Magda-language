@@ -24,7 +24,7 @@
 
 12. Porting su OCaml pericoloso visto il grosso appoggio che Magda fa su Java
 
-13. Implementazione con le Lambda espressioni dei CMagdaMethod
+13. Implementazione con le Lambda espressioni dei CMagdaMethod //DONE
 
 
 
@@ -98,4 +98,20 @@ fatto che mi salvo dei Vector nel contesto globale aSelf del mixin, ma aSelf è 
 da Object a Vector, il tutto è corretto ma genera un warning, questi ultimi non sono di facile risoluzione, ma essendo pochi li ho soppressi.
 In futuro si potrebbe provare a riscrivere le librerie di Vector, ma fare un safe cast farebbe perdere un sacco di performace a Vector, che è una
 classe decisamente troppo essenziale per essere lenta.
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log4 21/03/2025 - 24/03/2025
+
+Trasformata la abstract class CMagdaMethod in un'interfaccia, così da poter implementare i metodi come lambda-espressione invece di usare una
+classe anonima, questo ha ridotto significativamente i .class generati dal compiler, l'obiettivo potrebbe essere 1 solo output.
+La riduzione è comunque stata molto significativa, ad esempio nell'HelloWorld di base siamo passati da 110 file .class generati a solo 37, meno della
+metà.
+Imbastito un file uxf (e relativo pdf esportato) di uno schema UML dell'intero compiler, i package rappresentati sono quelli non generati da javacc,
+quindi i package Compiler, mtj e ProgramTree (quest'ultimo con tutti i sotto-package presenti, Declarations, Instructions, Expressions, LValues e 
+MixinExpressions)
+
+/*----------------------------------------------------------------------------------------------------*/
+
+
 

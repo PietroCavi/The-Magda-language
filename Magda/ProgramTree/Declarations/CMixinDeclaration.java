@@ -26,30 +26,30 @@ public class CMixinDeclaration implements IDeclaration, ITypeElement{
 
     */
 
-    public static CMixinDeclaration createCMixinDeclaration(String aMixinName,
-                             IMixinExpression aBaseMixinExpression,
-                             CFieldDeclarations aFlds,
-                             CNewMethodDeclarations aNewMethods,
-                             CMethodDeclarations aOverridenMethods,
-                             CIniModuleDeclarations aIniModules,
-                             CPolymorphismParams apolyPars){
+    public static CMixinDeclaration createCMixinDeclaration( String aMixinName,
+                                                             IMixinExpression aBaseMixinExpression,
+                                                             CFieldDeclarations aFlds,
+                                                             CNewMethodDeclarations aNewMethods,
+                                                             CMethodDeclarations aOverridenMethods,
+                                                             CIniModuleDeclarations aIniModules,
+                                                             CPolymorphismParams apolyPars){
 
         CMixinDeclaration res = new CMixinDeclaration(aMixinName,aBaseMixinExpression,aFlds,aNewMethods,aOverridenMethods,aIniModules,apolyPars);
         
         apolyPars.setMixin(res);
         aNewMethods.setMixin(res);
         aOverridenMethods.setMixin(res);
-        
+
         return res;
     }
 
-    private CMixinDeclaration(String aMixinName,
-                             IMixinExpression aBaseMixinExpression,
-                             CFieldDeclarations aFlds,
-                             CNewMethodDeclarations aNewMethods,
-                             CMethodDeclarations aOverridenMethods,
-                             CIniModuleDeclarations aIniModules,
-                             CPolymorphismParams apolyPars){
+    protected CMixinDeclaration( String aMixinName,
+                                 IMixinExpression aBaseMixinExpression,
+                                 CFieldDeclarations aFlds,
+                                 CNewMethodDeclarations aNewMethods,
+                                 CMethodDeclarations aOverridenMethods,
+                                 CIniModuleDeclarations aIniModules,
+                                 CPolymorphismParams apolyPars){
         MixinName = aMixinName;
         // System.out.println("// CMixinDeclaration: name=" + MixinName);
         BaseMixinExpression =  aBaseMixinExpression;

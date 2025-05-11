@@ -36,7 +36,7 @@ public class CAbstractMethodDeclaration extends CInterfaceMethodDeclaration{
         return res;
     }
 
-    private CAbstractMethodDeclaration (IMixinExpression aResType, 
+    protected CAbstractMethodDeclaration (IMixinExpression aResType, 
                                        String aMethodName, 
                                        CParameterDeclarations aPars, 
                                        int aPosInCode, 

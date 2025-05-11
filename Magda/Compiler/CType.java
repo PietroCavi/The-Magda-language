@@ -69,7 +69,7 @@ public class CType extends ArrayList<ITypeElement>{
 
     //------------ constructors ---------------
 
-    private CType(boolean isAll){ 
+    protected CType(boolean isAll){ 
         super();
         
         if (isAll)
@@ -79,7 +79,7 @@ public class CType extends ArrayList<ITypeElement>{
         //else - void
     }
 
-    private CType(CEnvironment env, CPolymorphismParam param, CType value){  
+    protected CType(CEnvironment env, CPolymorphismParam param, CType value){  
         super();
       
         //add (env.getMixin("Object"));
@@ -88,7 +88,7 @@ public class CType extends ArrayList<ITypeElement>{
     
     }
 
-    private CType(CEnvironment env, ITypeElement aTypeElement){ 
+    protected CType(CEnvironment env, ITypeElement aTypeElement){ 
         super();
       
         //app = new CPolyApplicationValues();

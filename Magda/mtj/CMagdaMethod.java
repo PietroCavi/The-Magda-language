@@ -1,6 +1,7 @@
 package Magda.mtj;
 
-public abstract  class CMagdaMethod implements IMagdaObjectElement
-{
+public interface CMagdaMethod extends IMagdaObjectElement{
+
 	public abstract CMagdaObject Execute(CMagdaObject aSelf, CMagdaObject[] params);
+
 };

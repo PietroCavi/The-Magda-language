@@ -25,12 +25,12 @@ public class CNewMethodDeclaration extends CInterfaceMethodDeclaration{
 
     */
 
-    public static CNewMethodDeclaration createCNewMethodDeclaration(IMixinExpression aResType, 
-                                                                    String aMethodName, 
-                                                                    CParameterDeclarations aPars, 
-                                                                    CMethodBody aBody, 
-                                                                    int aPosInCode, 
-                                                                    String aProgramFile){
+    public static CNewMethodDeclaration createCNewMethodDeclaration( IMixinExpression aResType, 
+                                                                     String aMethodName, 
+                                                                     CParameterDeclarations aPars, 
+                                                                     CMethodBody aBody, 
+                                                                     int aPosInCode, 
+                                                                     String aProgramFile){
         CNewMethodDeclaration res = new CNewMethodDeclaration(aResType,aMethodName,aPars,aBody,aPosInCode,aProgramFile);
 
         aPars.setMethod(res);
@@ -38,12 +38,12 @@ public class CNewMethodDeclaration extends CInterfaceMethodDeclaration{
         return res;
     }
 
-	private CNewMethodDeclaration (IMixinExpression aResType, 
-                                  String aMethodName, 
-                                  CParameterDeclarations aPars, 
-                                  CMethodBody aBody, 
-                                  int aPosInCode, 
-                                  String aProgramFile){ 
+	private CNewMethodDeclaration ( IMixinExpression aResType, 
+                                    String aMethodName, 
+                                    CParameterDeclarations aPars, 
+                                    CMethodBody aBody, 
+                                    int aPosInCode, 
+                                    String aProgramFile){ 
         super( aResType, aMethodName, aPars, aPosInCode, aProgramFile);
 	    Body = aBody;
 	}

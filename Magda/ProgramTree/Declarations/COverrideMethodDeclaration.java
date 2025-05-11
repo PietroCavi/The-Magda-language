@@ -44,7 +44,7 @@ public class COverrideMethodDeclaration implements IMethodDeclaration{
         return res;
 	}
 
-	private COverrideMethodDeclaration (IMixinExpression aResType, 
+	protected COverrideMethodDeclaration (IMixinExpression aResType, 
                                        String aMixinName, 
                                        String aMethodName, 
                                        CParameterDeclarations aPars, 
@@ -58,7 +58,7 @@ public class COverrideMethodDeclaration implements IMethodDeclaration{
 	    Pars = aPars;
 	    LineNo = aLineNo;
 	    ProgramFile = aProgramFile;
-	    aPars.setMethod(this);
+	    //aPars.setMethod(this);
 	}
 
     public void print(java.io.PrintStream o){ 
