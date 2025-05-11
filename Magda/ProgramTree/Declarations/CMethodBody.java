@@ -19,16 +19,20 @@ public class CMethodBody extends CMemberBody{
         o.println("{ int offset = AllSequence.getMixinOffsetByName(\"" + aMixinName + "\")+"+String.valueOf(env.getMixin(aMixinName).getMethodOffset(aMethodName)) +";");
         
         if (override){
-            o.println(" aObjectBody[offset] = new CMagdaMethodOverloaded ( (CMagdaMethod) aObjectBody[offset]) {");
+            o.println(" aObjectBody[offset] = new CMagdaMethodOverloaded ( (CMagdaMethod) aObjectBody[offset]);");
+            o.println(" ((CMagdaMethodOverloaded)aObjectBody[offset]).setExecuteFunction(");
             
-            o.println(" public CMagdaObject Execute(CMagdaObject aSelf, CMagdaObject[] params) { ");
+            o.println(" (aSelf,params,SuperBody) -> { ");
 		    super.GenCode(o, env, h, true);
-		    o.println(" }; // end of declaration of method "+aMixinName+"."+aMethodName);
+		    o.println("}); // end of declaration of method "+aMixinName+"."+aMethodName);
 	    }
         else{
             o.println(" aObjectBody[offset] = (CMagdaMethod)(CMagdaObject aSelf, CMagdaObject[] params) -> {");
 		    super.GenCode(o, env, h, true);
+            
+            o.println("};");
         }
+        o.println("};");
     }
 
 

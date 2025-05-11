@@ -42,7 +42,9 @@ public class CProgram implements IProgramElem{
         o.println(" CMagdaObject[] temp = new CMagdaObject[100];");
         
         Instrs.GenCode(o,new CInstrEnvironment(Decls, null, new CVariableDeclarations(), new CParameterDeclarations()),h);
-        
+
+        //o.println("// preparing call to method MainClass.mainProgram\n{ //object creation for: MainClass\nCMagdaMixinSequence tempList= new CMagdaMixinSequence();\n tempList.add( CMagdaMixinSequence.globalList.getMixin(\"Object\"));\ntempList.add (CMagdaMixinSequence.globalList.getMixin(\"MainClass\"));\ntemp[1]= tempList.CreateObject();\n}\n{CMagdaIniParams IniParamsObjectCreation = new CMagdaIniParams();\nCMagdaIniModules modules = new CMagdaIniModules();\n}\ntemp[1].executeMethodByName(\"Object\", 0, new CMagdaObject[0]);\n{ CMagdaObject[] ParamsToPass = {};\ntemp[0]=temp[1].executeMethodByName (\"MainClass\", 0, ParamsToPass);}  // call to method MainClass.mainProgram finished");
+ 
         o.println("} catch (Exception e)");
         o.println("{ System.err.println(\"\\nError in Magda program at line:\"+String.valueOf(MagdaLineNo)+\" of file \"+ MagdaProgramFile +\":\"); ");
         o.println("  System.err.println( e.toString() ); ");

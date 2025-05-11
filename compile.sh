@@ -1,11 +1,17 @@
+
 set -e
 echo 
 printf "Compile Magda program: %s.magda (Magda parser step)" "$@"
 echo
 cp Magda/src/$@/$@.magda ./ > tmp.log
 rm tmp.log
-java Magda.Parser.Parser $@.magda >Magda/src/$@/obj/MagdaProgram.java
-rm $@.magda
+
+if java Magda.Parser.Parser $@.magda >Magda/src/$@/obj/MagdaProgram.java;then
+    rm $@.magda 
+else
+    rm $@.magda
+    exit 1
+fi
 
 echo 
 printf "Compile Magda program: $@ (Java compiler step)"

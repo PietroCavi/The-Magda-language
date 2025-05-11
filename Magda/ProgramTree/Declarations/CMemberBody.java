@@ -44,7 +44,7 @@ public class CMemberBody implements IProgramElem{
         if (returnNull)
             o.println(" return null;");
         
-        o.println(" }; };");
+        //o.println(" }; };");
     }
 
 };

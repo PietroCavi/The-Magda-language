@@ -18,13 +18,15 @@
 
 9. Boolean, Integer, Float, Byte come Mixin nativi anzichè come libreria                                          //NON UNA BUONA IDEA
 
-10. Gli iniModules sono un po' incasinati                                                                         //DA FARE
+10. Gli iniModules sono un po' incasinati                                                                         //DA FARE MA GIà MEGLIO
 
 11. Forzare la specificazione del Mixin solo in caso di ambiguità con un opportuno errore in fase di compilazione //FATTO
 
 12. Porting su OCaml pericoloso visto il grosso appoggio che Magda fa su Java                                     //FARE RICERCA PER PARLARNE NELLA TESI
 
 13. Implementazione con le Lambda espressioni dei CMagdaMethod                                                    //FATTO
+
+14. Implementazione con le Lambda espressioni dei Mixin, Metodi Override e IniModules                             //FATTO
 
 
 
@@ -42,6 +44,9 @@ Note:
     modifiche anche per tutti gli IDE che utilizzino TextMate per quanto riguarda l'editor) e uno per vim per avere l'highlight della sintassi per i file
     con estensione '.magda'
 
+    Ritengo che i punti 13 e 14 non aggiungano effettivamente niente a livello di comprensione o performance (o almeno, nel modo in cui l'ho fatto), ma
+    mi hanno permesso di ridurre drasticamente l'output del compiler, infatti utilizzando le lambda espressioni ho eliminato completamente le classi
+    anonime. Ora se compilo un programma non ottengo più un centinaio di .class come output del compiler, ma solo uno!
 
 INIZIO DEI LOG
 
@@ -400,4 +405,277 @@ Log6 05/04/2025 - 14/04/2025
 
     Quindi ho creato questi nuovi metodi del Parser che sfruttano il ProgramContext per riuscire a dire al compiler i Mixin corretti dei Field e delle
     chiamate quando non ci sono ambiguità, e segnalano la presenza di ambiguità dando un errore altrimenti!
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log7 15/04/2025 - 28/04/2025
+
+Dall'ultima ho risolto 2 problemi, uno noto, l'altro è un adattamento di ciò che ho fatto nell'ultimo log, ora vedremo meglio cosa sono andato
+a modificare
+
+*Valori costanti negli IniModules*
+
+    Questo era un bug noto di Magda, prima in un IniModule non era possibile utilizzare valori costanti, facciamo un esempio:
+
+        mixin MyMixin of Object =
+            
+            value: Integer;
+            
+            required MyMixin() initializes ()
+            begin
+                this.MyMixin.resetValue();		
+                
+                super[];
+            end;
+      
+            new void resetValue() 
+            begin
+                this.MyMixin.setValue(0);
+            end;
+  
+            new void setValue(v:Integer) 
+            begin
+                this.MyMixin.value := v;
+ 	        end;
+        end;
+
+    Come possiamo vedere in questo piccolo esempio l'unico modo di assegnare un valore costante era quello di chiamare un metodo esterno al modulo
+    di inizializzazione che andasse a fare una set con il valore costante, non sarebbe neanche stato possibile utilizzare un setter a cui passare
+    il valore costante dall'IniModule, quindi this.MyMixin.setValue(0); non sarebbe stata valida come chiamata.
+
+    Adesso invece si potrebbe tranquillamente utilizzare this.MyMixin.setValue(0), ma anche banalmente:
+        
+        mixin MyMixin of Object =
+            
+            value: Integer;
+            
+            required MyMixin() initializes ()
+            begin
+                this.MyMixin.value := 0;		
+                
+                super[];
+            end;
+        end;
+
+    Questo era anche previsto dalla specifica originale del linguaggio, non era possibile a causa di un "bug" che era appunto segnalato tra i bug noti
+    
+    Qual era il problema?
+
+    A livello di compilazione la generazione del codice di un IniModule viene affidata agli oggetti della classe CIniModuleBody, che vanno a creare una
+    classe anonima di tipo CMagdaIniModule, e fanno una ridichiarazione di Execute, 
+        
+        "new CMagdaIniModule () { public void Execute(CMagdaObject aSelf, CMagdaIniModules ModulesToExecute, CMagdaIniParams IniParams)"
+
+    Prestiamo attenzione al parametro del metodo Execute IniParams, che fa riferimento ai parametri inizializzati dall'IniModule in considerazione,
+    nel caso dell'esempio sarebbe una lista vuota, ma questo non è importante!
+
+    Il problema si verifica quando dichiaro un valore costante, perciò potrebbe essere utile come viene gestita la generazione del codice degli Integer
+    quindi andiamo a prendere il codice della classe CIntegerLiteral
+    
+        public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){
+            new CObjectCreation(new CMixinExpressionIdentifier("FullInteger"), new CInitializationOfParams()).GenCode(o, env, h, target);
+            //OLD VERSION
+            //o.println ( h.tempAcc(target)+ ".internalPointer = new Integer("+Value+");");
+            //NEW VERSION
+            o.println ( h.tempAcc(target)+ ".internalPointer = (Integer)"+Value+";");
+        }
+
+    Non sembrerebbero esserci problemi qui, però potrebbe essere utile andare a vedere il codice della classe CObjectCreation
+    
+        public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  
+            o.print("{ //object creation for: "); MixinExpr.print(o); o.println("");
+            o.println("CMagdaMixinSequence tempList= new CMagdaMixinSequence();");
+            o.println(" tempList.add( CMagdaMixinSequence.globalList.getMixin(\"Object\"));");
+            MixinExpr.GenCodeForMixinExpression (o, env,  h);
+            o.println(h.tempAcc(target)+"= tempList.CreateObject();");
+            o.println("}");
+            String IniParamsSetter="";
+        
+            for (int i=0; i<Init.size(); i++){ 
+                int temp = h.getTemp();
+                Init.get(i).Expr.GenCode(o, env, h, temp);
+   !--->        IniParamsSetter += "IniParams.putParamValue(\""+Init.get(i).MixinName+"\",\""+Init.get(i).ParamName+"\","+h.tempAcc(temp)+");\n";
+            }
+      
+   !--->    o.println("{CMagdaIniParams IniParams = new CMagdaIniParams();");
+            o.print(IniParamsSetter);
+
+            o.println("CMagdaIniModules modules = new CMagdaIniModules();");
+            int modulecount=MixinExpr.GetType(env).GenCodeForActivatedModules(o, env, h, Init);
+            if (modulecount>0){ 
+                o.println("CMagdaIniModule firstModule = modules.remove(0);");
+   !--->        o.println("firstModule.Execute("+h.tempAcc(target)+",modules, IniParams);");
+            }
+            o.println("}");
+
+            /*Init.GenCode(o,  env, h, target);*/
+
+            o.println(h.tempAcc(target)+".executeMethodByName(\"Object\", "+String.valueOf (env.getMixin("Object").getMethodOffset("Init"))+", new CMagdaObject[0]);");
+
+        }
+
+    Ecco il problema, nei punti del codice evidenziati con "!--->" è evidenziato il problema, quando vado a creare un nuovo oggetto, quindi anche un
+    Integer, viene creata una lista chiamata IniParams, che fa riferimento ai parametri di inizializzazione dell'oggetto!
+    
+    Ora che abbiamo individuato il problema dobbiamo anche risolverlo!
+
+    Questo è davvero triviale a questo punto, ci basterà cambiare il nome di uno dei due parametri, nella mia soluzione ho deciso di sostituire il nome
+    "IniParams" all'interno di CObjectCreation con il nome "IniParamsObjectCreation", così da evitare il name clash e l'errore di ridichiarazione.
+    
+    Ovviamente così facendo non si creano problemi altrove, il bug viene semplicemente risolto senza problemi!
+
+    Ecco il codice di Object creation dopo il fix:
+
+
+        public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  
+            o.print("{ //object creation for: "); MixinExpr.print(o); o.println("");
+            o.println("CMagdaMixinSequence tempList= new CMagdaMixinSequence();");
+            o.println(" tempList.add( CMagdaMixinSequence.globalList.getMixin(\"Object\"));");
+            MixinExpr.GenCodeForMixinExpression (o, env,  h);
+            o.println(h.tempAcc(target)+"= tempList.CreateObject();");
+            o.println("}");
+            String IniParamsSetter="";
+        
+            for (int i=0; i<Init.size(); i++){ 
+                int temp = h.getTemp();
+                Init.get(i).Expr.GenCode(o, env, h, temp);
+   !--->        IniParamsSetter += "IniParamsObjectCreation.putParamValue(\""+Init.get(i).MixinName+"\",\""+Init.get(i).ParamName+"\","+h.tempAcc(temp)+");\n";
+            }
+      
+   !--->    o.println("{CMagdaIniParams IniParamsObjectCreation = new CMagdaIniParams();");
+            o.print(IniParamsSetter);
+
+            o.println("CMagdaIniModules modules = new CMagdaIniModules();");
+            int modulecount=MixinExpr.GetType(env).GenCodeForActivatedModules(o, env, h, Init);
+            if (modulecount>0){ 
+                o.println("CMagdaIniModule firstModule = modules.remove(0);");
+   !--->        o.println("firstModule.Execute("+h.tempAcc(target)+",modules, IniParamsObjectCreation);");
+            }
+            o.println("}");
+
+            /*Init.GenCode(o,  env, h, target);*/
+
+            o.println(h.tempAcc(target)+".executeMethodByName(\"Object\", "+String.valueOf (env.getMixin("Object").getMethodOffset("Init"))+", new CMagdaObject[0]);");
+
+        }
+
+---
+
+A questo punto rimaneva un problema, nel log precedente ho parlato di come sono andato a disambiguare le chiamate ai metodi e la selezione dei field,
+tuttavia questa feature non era stata implementata per gli IniModules, ma solo per i metodi, questo perchè avevo modificato il PreParser solamente per i
+metodi normali.
+
+---
+
+* Disambiguazione all'interno degli IniModules *
+
+    Quello che voglio ottenere banalmente è poter passare da:
+
+        mixin MyMixin of Object =
+            
+            value: Integer;
+            
+            required MyMixin() initializes ()
+            begin
+   !--->        this.MyMixin.value := 0;		
+                
+                super[];
+            end;
+        end;
+
+    A una scrittura più pulita (in assenza di ambiguità) del tipo
+        
+        mixin MyMixin of Object =
+            
+            value: Integer;
+            
+            required MyMixin() initializes ()
+            begin
+   !--->        this.value := 0;		
+                
+                super[];
+            end;
+        end;
+
+    Visto quello che ho fatto nel log precedente non dovrebbe essere troppo difficile, tuttavia ho un problema, ovvero che i metodi sono unici,
+    non essendo possibile l'overloading in Magda posso identificare i metodi all'interno del mio ProgramContext con una semplice Stringa.
+
+    Tuttavia i metodi di inizializzazione, distinti dal token initialize hanno una sorta di override, infatti possono esserci più IniModules all'interno
+    di un Mixin.
+    Anche se devo ricordarmi che questa forma di override è leggermente limitata dal fatto che non posso avere parametri con lo stesso nome in due
+    IniModule diversi, questo perchè avrei problemi con la ObjectCreation dato che devo specificare il nome dei parametri che voglio inizializzare
+
+    Tornando al problema iniziale, devo trovare un modo per identificare gli IniModules specifici, anche se non posso fare affidamento sul nome,
+    e idealmente vorrei aggiungere gli IniModules all'interno del ProgramContext come se fossero dei metodi normali, così da non dover cambiare troppo
+    il ProgramContext e così da poter riutilizzare le funzioni del Parser che ho fatto in passato, dato che il Body di un IniModule viene trattato dal
+    Parser allo stesso modo del Body di un Metodo qualsiasi.
+
+    Per differenziare i vari IniModules di un Mixin posso andare a guardare i Parametri sotto forma di ArrayList<String> contenente i nomi dei parametri.
+    
+    Quindi ora devo aggiungere gli IniModules come se fossero metodi all'interno del mio ProgramContext, quindi dal ProgramContext passo al MixinContext
+    e voglio poter aggiungere il metodo al mio methodsContext, che ricordiamo essere un:
+
+        private HashMap<String,MethodContext> methodsContext = new HashMap<String,MethodContext>();
+
+    essendo una HashMap che assegna al nome del metodo il suo contesto posso notare subito un problema, i nomi dei moduli di inizializzaizone devono
+    essere unici, ma come posso fare se sono in overloading???
+
+    Ho creato una variabile counter all'interno del MixinContext:
+    
+        private int counter = 0;
+    
+    questo mi permetterà di numerare gli IniModules con il criterio "initialize n", questo mi permetterà di non andare in contrasto con i nomi dei
+    metodi normali, dato che sarebbe un errore sintattico (e quindi impossibile) dichiarare un metodo con uno spazio nel nome.
+
+    Ora il ProgramContext ha tutte le informazioni necessarie, anche se mi manca un ultimo pezzo del puzzle per poter andare avanti, devo poter
+    recuperare le informazioni che mi servono dal Parser, così da poter utilizzare le info contestuali per poter risolvere i problemi di ambiguità
+    all'interno degli IniModules
+
+    Per fare questo ho aggiunto al ProgramContext un metodo costruito in questo modo
+
+        public String getIniModuleName(String mixinName, ArrayList<String> params){
+            return programContext.get(mixinName).getIniModuleName(params);
+        }
+
+    Che andrà a chiamare l'omonimo metodo all'interno del MixinContext, all'interno del MixinContext ho inserito una HashMap che ad un ArrayList<String>
+    (che conterrà i nomi degli argomenti dell'IniModule che voglio selezionare) associa il nome dell'IniModule, quindi all'interno del MixinContext avrò
+
+        private HashMap<ArrayList<String>,String> iniModulesNameSpace = new HashMap<ArrayList<String>,String>();
+    
+        public String getIniModuleName(ArrayList<String> params){
+            return iniModulesNameSpace.get(params);
+        }
+
+    A questo punto dal Parser potrò ricavarmi un ArrayList<String> contente i nomi dei parametri, e potrò interrogare il ProgramContext per avere il nome
+    dell'IniModule, ad esempio "initialize 1", a questo punto per il body del mio IniModule potrò interrogare il ProgramContext ogni volta che voglio,
+    dato che avrò il nome del mixin in cui mi trovo e il nome del "metodo" (IniModule) in cui mi trovo.
+
+    Così facendo posso utilizzare gli stessi metodi contestuali del Parser per le istruzioni contenute nei metodi normali anche per gli IniModules
+
+    A questo punto la definizione del mixin contente un IniModule formato in questo modo:
+
+        mixin MyMixin of Object =
+            
+            value: Integer;
+            
+            required MyMixin() initializes ()
+            begin
+                this.value := 0;		
+                
+                super[];
+            end;
+        end;
+
+    è valida (ovviamente mantendo valide anche le vecchie definizioni)
+
+--
+
+Grazie a questi sviluppi gli IniModules risultano essere più facili da utilizzare e beneficiano delle modifiche al compiler fatte in precedenza.
+Ora il linguaggio è più piacevole da usare perchè gode di un'ergonomia formata meglio.
+
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log8 30/04/2025
+
 

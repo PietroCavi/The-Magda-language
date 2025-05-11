@@ -199,10 +199,9 @@ public class CMixinDeclaration implements IDeclaration, ITypeElement{
     public void GenCode (java.io.PrintStream o, CEnvironment env, CGenCodeHelper h){ 
         o.println();
         o.println(" /* ------- beginning of mixin ["+MixinName+"] --------- */");
-        o.println("CMagdaMixinSequence.globalList.add( curMixin=new CMagdaMixin (\""+MixinName+"\") {");
-        o.println(" public int getObjectLayerSize() ");
-        o.println(" { return "+String.valueOf(getLayerSize())+"; };");
-        o.println("public void setMethods(CMagdaMixinSequence AllSequence, IMagdaObjectElement[] aObjectBody) { ");
+        o.println("curMixin=new CMagdaMixin (\""+MixinName+"\","+String.valueOf(getLayerSize())+");");
+        
+        o.println("curMixin.setSetMethodsFunction( (CMagdaMixinSequence AllSequence, IMagdaObjectElement[] aObjectBody) -> { ");
 
         CMethodEnvironment env2 =  new CMethodEnvironment(env.Decls, this);
   
@@ -215,8 +214,11 @@ public class CMixinDeclaration implements IDeclaration, ITypeElement{
         for (int i=0; i<Flds.size(); i++)
             Flds.get(i).GenCode(o, env2, h);
   
-        o.println( " } // end of setMethods");
+        //o.println( " } // end of setMethods");
         o.println("} ); ");
+        
+        o.println("CMagdaMixinSequence.globalList.add( curMixin);");
+        
         o.println("curMixin.IniModules = new CMagdaIniModule["+ IniModules.size() +"];");
   
         for (int i=0; i< IniModules.size(); i++){ 

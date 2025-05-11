@@ -592,7 +592,6 @@ IExpression DirectSelect(String mixinname,String methodname,IExpression Target):
             throw new Error("No field named "+FieldName.image+" for mixin of type "+Target.GetTypeString());
 
         String[] unambiguousMixin = controls.toArray(new String[0]);
-        System.out.println("// OIII " + unambiguousMixin[0] + "  " + FieldName.image);
         return new CFieldSelectExpression(Target,unambiguousMixin[0],FieldName.image,programContext.getFieldType(unambiguousMixin[0],FieldName.image));
     }
 }
@@ -639,8 +638,6 @@ IExpression MethodCallSuffixContext (String mixinname,String methodname,IExpress
                        
 
             String[] unambiguousMixin = controls.toArray(new String[0]);
-
-            System.out.println("// OIII "+"mix: "+unambiguousMixin[0]+"  "+"meth: "+MethodName.image);            
 
             return new CMethodCallExpression(Target, unambiguousMixin[0], MethodName.image, list,programContext.getMethodReturnType(unambiguousMixin[0],MethodName.image));
         }
