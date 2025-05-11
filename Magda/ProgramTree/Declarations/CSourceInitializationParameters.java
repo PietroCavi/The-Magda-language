@@ -1,0 +1,33 @@
+package Magda.ProgramTree.Declarations;
+import Magda.ProgramTree.*;
+
+import java.util.*;
+
+import Magda.Compiler.*;
+
+
+public class CSourceInitializationParameters extends CProgramElemVector<CSourceInitializationParameter>
+{
+
+	public CParameterDeclarations toFlatParameters()
+	{ CParameterDeclarations result = new CParameterDeclarations();
+	  for (int i=0; i< size() ; i++ )
+	  {  result.add( new CParameterDeclaration(get(i).ParName, get(i).Type));
+	  }
+	  return result;
+	}
+        
+        public boolean containsParam(String MixinName, String ParName)
+        { for (int i=0; i<size(); i++)
+            if (get(i).MixinName.equals(MixinName) && get(i).ParName.equals(ParName))
+               return true;
+          return false;
+        }
+                
+        public void CheckTypes( CMethodEnvironment env)  throws CTypeError
+	{ for (int i=0; i<size(); i++)
+	    get(i).GetType(env);
+	}
+
+ 
+}

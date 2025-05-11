@@ -1,0 +1,19 @@
+include "Magdalib/library.magda";
+
+mixin HelloWorld of Object = 
+  new String getMessage ()
+  begin
+    return "\r\nHello from Magda world!\r\n";
+  end;
+end;
+
+mixin MainClass of Object = 
+  new Object mainProgram()
+    msg:HelloWorld;
+  begin 
+    msg := new HelloWorld[];
+    msg.HelloWorld.getMessage().String.print();
+  end;
+end;
+
+(new MainClass[]).MainClass.mainProgram();
