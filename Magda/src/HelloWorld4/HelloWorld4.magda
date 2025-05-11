@@ -31,4 +31,3 @@ mixin MainClass of Object =
   end;
 end;
 
-(new MainClass[]).MainClass.mainProgram();

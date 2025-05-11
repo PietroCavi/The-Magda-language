@@ -32,7 +32,7 @@ mixin Point3D of Point2D =
 end;
 
 mixin MainClass of Object = 
-  new Object main_matter()
+  new Object mainProgram()
     x:Point3D;
   begin 
     x := new Point2D, Point3D[];
@@ -44,4 +44,4 @@ mixin MainClass of Object =
   end;
 end;
 
-(new MainClass []).MainClass.main_matter();
+//(new MainClass []).MainClass.main_matter();

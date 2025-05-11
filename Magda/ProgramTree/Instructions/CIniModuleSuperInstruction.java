@@ -43,20 +43,49 @@ public class CIniModuleSuperInstruction extends CInstruction{
 
 	public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h){ 
         super.GenCode(o, env, h); 
-	    o.println("if (ModulesToExecute.size() >0)");
-        o.println(" { CMagdaIniModule mod = ModulesToExecute.remove(0); ");
 	    
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("if (ModulesToExecute.size() >0){\n");
+
+
+        CGenCodeHelper.addTab();
+
+        str.append(CGenCodeHelper.tab);
+        str.append("CMagdaIniModule mod = ModulesToExecute.remove(0);");
+
+        o.println(str);
+        str.setLength(0);	    
+
         int temp=-1;
 	    for (int i=0; i<params.size(); i++){ 
             CInitializationOfParam param = params.get(i);
 	        if (temp==-1)
                 temp = h.getTemp();
 	        param.Expr.GenCode(o, env, h, temp);
-	        o.println("IniParams.putParamValue(\""+param.MixinName+"\",\""+param.ParamName+"\","+ h.tempAcc(temp)+");");
+
+	        str.append(CGenCodeHelper.tab);
+            str.append("IniParams.putParamValue(\"");
+            str.append(param.MixinName);
+            str.append("\",\"");
+            str.append(param.ParamName);
+            str.append("\",");
+            str.append(h.tempAcc(temp)+");");
+            
+            o.println(str);
+            str.setLength(0);	    
 	    }
         
-        o.println("  mod.Execute(aSelf, ModulesToExecute, IniParams);");
-	    o.println("}");
+	    str.append(CGenCodeHelper.tab);
+        str.append("mod.Execute(aSelf, ModulesToExecute, IniParams);\n");
+
+        CGenCodeHelper.removeTab();
+        
+	    str.append(CGenCodeHelper.tab);
+	    str.append("}");
+        
+        o.println(str);
 
         /*
 	    int temp= h.getTemp();

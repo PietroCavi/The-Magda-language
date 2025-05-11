@@ -16,7 +16,21 @@ public abstract class CInstruction implements IInstruction{
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h){ 
-        o.println("MagdaLineNo= "+String.valueOf(PosInProgram)+";  MagdaProgramFile = \""+ ProgramFile +"\"; // Position in source: "+ProgramFile+"."+String.valueOf(PosInProgram) );
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("MagdaLineNo= ");str.append(String.valueOf(PosInProgram));str.append(";\n");
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("MagdaProgramFile = \"");
+        str.append(ProgramFile);
+        str.append("\"; // Position in source: ");
+        str.append(ProgramFile);
+        str.append(".");
+        str.append(String.valueOf(PosInProgram));
+
+        o.println(str);
+
         h.resetTemp();
     }
 

@@ -33,7 +33,19 @@ public class CInitializationOfParam implements IProgramElem{
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){ 
         int localTarget = h.getTemp();
         Expr.GenCode(o, env, h, localTarget);
-	    o.println(h.tempAcc(target)+ ".getStateHolderByName(\""+ MixinName +"\", "+String.valueOf( env.getMixin(MixinName).getFieldParamOffset(ParamName) ) +").Value = "+ h.tempAcc(localTarget)+";");
+	    
+        StringBuilder str = new StringBuilder(100);
+
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));
+        str.append(".getStateHolderByName(\"");
+        str.append(MixinName);
+        str.append("\", ");
+        str.append(String.valueOf( env.getMixin(MixinName).getFieldParamOffset(ParamName) ));
+        str.append(").Value = ");
+        str.append(h.tempAcc(localTarget)+";");
+
+        o.println(str);
 	}
 
 

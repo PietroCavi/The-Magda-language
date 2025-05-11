@@ -33,7 +33,12 @@ public class CThisExpression implements IExpression{
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  
-        o.println(h.tempAcc(target)+"= aSelf;");
+        StringBuilder str = new StringBuilder(100);
+
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));str.append("= aSelf;");
+
+        o.println(str);
     }
 
 };

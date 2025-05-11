@@ -30,7 +30,11 @@ public class CBooleanLiteral implements IExpression{
         //OLD VERSION
         //o.println ( h.tempAcc(target)+ ".internalPointer = new Boolean("+String.valueOf(Value)+");");
         //NEW VERSION
-        o.println ( h.tempAcc(target)+ ".internalPointer = "+String.valueOf(Value)+";");
+        
+        StringBuilder str = new StringBuilder(100);
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));str.append(".internalPointer = ");str.append(String.valueOf(Value));str.append(";");
+        o.println(str);
     }
 
 };

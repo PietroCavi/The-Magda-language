@@ -32,7 +32,7 @@ PARSER_BEGIN(Parser)
         public static void main(String args[]) throws ParseException {
             try{
                 programContext = PreParser.CreatePreParser(args[0]).prePars();
-                System.out.println("/*\n\n" + programContext + "\n\n*/\n");
+                //System.out.println("/*\n\n" + programContext + "\n\n*/\n");
             }
             catch(Exception e){
                 System.out.println(e);
@@ -45,18 +45,28 @@ PARSER_BEGIN(Parser)
             else if(programContext.checkForCycles() == true){
                 throw new Error ("The program contains cyclical mixins");
             }
-                     
 
-            System.out.println("");
-            System.out.println(" /* --------------------------------------------------------------------- */");
-            System.out.println(" /*  ----- Launching magda compiler  ---- */");
+            if(!programContext.containsMixin("MainClass")){
+                throw new Error ("This program doesn't contain a MainClass Mixin");
+            }
+            if(!programContext.containsMethod("MainClass","mainProgram")){
+                throw new Error ("The Mixin MainClass doesn't contain a method called mainProgram");
+            }
+            if(!programContext.emptyMainProgramParams()){
+                throw new Error ("The method mainProgram in the Mixin MainClass shouldn't have any parameters!");
+            }
+                     
+            System.out.println("\n/* --------------------------------------------------------------------- */");
+            System.out.println("/* --------------------- Launching magda compiler  --------------------- */");
+            System.out.println("/* --------------------------------------------------------------------- */\n");
+            
             Parser parser=null;
             if (args.length >0) {
                 try {
                     parser = CreateParser( args[0] );
                 } 
                 catch (java.io.FileNotFoundException e) { 
-                    System.err.println("Brak pliku!");
+                    System.err.println("Missing file!");
                     e.printStackTrace();
                 } 
             }
@@ -64,10 +74,16 @@ PARSER_BEGIN(Parser)
                 parser = new Parser(System.in);
         
             CProgram prg = parser.Program();
-            System.out.println("/* --- Program successfully parsed and checked - Generating output ---*/");
+            System.out.println("/* --------------------------------------------------------------------- */");
+            System.out.println("/* ---- Program successfully parsed and checked - Generating output ---- */");
+            System.out.println("/* --------------------------------------------------------------------- */\n");
+            
             //prg.print(System.out);
+            
             prg.CheckTypes();
             prg.GenCode(System.out, new CGenCodeHelper() );
+            
+            System.out.println("\n/* --------------------------------------------------------------------- */");
         }
 
     }
@@ -157,7 +173,7 @@ TOKEN :
 
 /* ----------------- LValues -------------------------*/
 
-ILValue FieldContext(String mixinname):
+ILValue Field(String mixinname):
 { 
     Token t1, t2; 
 }
@@ -187,15 +203,6 @@ ILValue FieldContext(String mixinname):
     )
 }
 
-ILValue Field():
-{ 
-    Token t1, t2; 
-}
-{
-    <THIS> "." t1=<ID> "." t2= <ID>
-    { return new CFieldLValue(t1.image, t2.image); } 
-}
-
 ILValue Variable():
 { 
     Token t1;
@@ -205,26 +212,13 @@ ILValue Variable():
     { return new CVariableLValue(t1.image); }
 }
 
-ILValue LValueContext(String mixinname):
+ILValue LValue(String mixinname):
 {
     ILValue res;
 }
 {  
     ( 
-        res = FieldContext(mixinname) |
-        res = Variable()
-    )
-    
-    {return res;}
-}
-
-ILValue LValue():
-{
-    ILValue res;
-}
-{  
-    ( 
-        res = Field() |
+        res = Field(mixinname) |
         res = Variable()
     )
     
@@ -233,87 +227,45 @@ ILValue LValue():
 
 /* ----------------- Instructions -------------------------*/
 
-CInstruction AssignmentContext(String mixinname,String methodname):
+CInstruction Assignment(String mixinname,String methodname):
 { 
     IExpression expr;
     ILValue lval;
 }
 { 
-    lval = LValueContext(mixinname) ":=" expr = ExpressionContext(mixinname,methodname)
+    lval = LValue(mixinname) ":=" expr = Expression(mixinname,methodname)
     {return new CAssignment(lval, expr);}
 }
 
-CInstruction Assignment():
-{ 
-    IExpression expr;
-    ILValue lval;
-}
-{ 
-    lval = LValue() ":=" expr = Expression()
-    {return new CAssignment(lval, expr);}
-}
-
-CInstruction WhileLoopContext(String mixinname, String methodname):
+CInstruction WhileLoop(String mixinname, String methodname):
 { 
     CInstructions instrs;
     IExpression expr;}
 { 
-    <WHILE> "(" expr = ExpressionContext(mixinname,methodname) ")" instrs = InstructionsContext(mixinname,methodname) <END> 
+    <WHILE> "(" expr = Expression(mixinname,methodname) ")" instrs = Instructions(mixinname,methodname) <END> 
     {return new CWhileLoopInstruction(expr, instrs); }
 }
 
-CInstruction WhileLoop():
-{ 
-    CInstructions instrs;
-    IExpression expr;}
-{ 
-    <WHILE> "(" expr = Expression() ")" instrs = Instructions() <END> 
-    {return new CWhileLoopInstruction(expr, instrs); }
-}
-
-CInstruction IfCondContext(String mixinname, String methodname):
+CInstruction IfCond(String mixinname, String methodname):
 { 
     IExpression cond; 
     CInstructions trueInstr;
     CInstructions falseInstr=  new CInstructions();
 }
 { 
-    <IF> "(" cond= ExpressionContext(mixinname,methodname) ")"
-    trueInstr = InstructionsContext(mixinname,methodname)
-    [<ELSE>   falseInstr = InstructionsContext(mixinname,methodname) ]
+    <IF> "(" cond= Expression(mixinname,methodname) ")"
+    trueInstr = Instructions(mixinname,methodname)
+    [<ELSE>   falseInstr = Instructions(mixinname,methodname) ]
     <END>
     { return new CIfCondInstruction(cond, trueInstr, falseInstr); }
 }
 
-CInstruction IfCond():
-{ 
-    IExpression cond; 
-    CInstructions trueInstr;
-    CInstructions falseInstr=  new CInstructions();
-}
-{ 
-    <IF> "(" cond= Expression() ")"
-    trueInstr = Instructions()
-    [<ELSE>   falseInstr = Instructions() ]
-    <END>
-    { return new CIfCondInstruction(cond, trueInstr, falseInstr); }
-}
-
-CInstruction ReturnContext(String mixinname,String methodname):
+CInstruction Return(String mixinname,String methodname):
 {
     IExpression expr;
 }
 { 
-    <RETURN> expr=ExpressionContext(mixinname,methodname)
-    {return new CReturnInstruction(expr);}
-}
-
-CInstruction Return():
-{
-    IExpression expr;
-}
-{ 
-    <RETURN> expr=Expression()
+    <RETURN> expr=Expression(mixinname,methodname)
     {return new CReturnInstruction(expr);}
 }
 
@@ -326,7 +278,7 @@ CInstruction NativeInstruction():
     { return new CNativeInstruction(t.image); } 
 }
 
-IInstruction InstructionContext(String mixinname, String methodname):
+IInstruction Instruction(String mixinname, String methodname):
 { 
     CInstruction res; 
     IExpression tmp;
@@ -334,12 +286,12 @@ IInstruction InstructionContext(String mixinname, String methodname):
 }
 { 
     (   
-        LOOKAHEAD(6) res = AssignmentContext(mixinname,methodname) | 
-        LOOKAHEAD(2) tmp = ExpressionContext(mixinname,methodname) {res = new CExprInstruction(tmp);}|
-        res = ReturnContext(mixinname,methodname) |
+        LOOKAHEAD(6) res = Assignment(mixinname,methodname) | 
+        LOOKAHEAD(2) tmp = Expression(mixinname,methodname) {res = new CExprInstruction(tmp);}|
+        res = Return(mixinname,methodname) |
         res = NativeInstruction() |
-        res = WhileLoopContext(mixinname,methodname) |
-        res = IfCondContext(mixinname,methodname)
+        res = WhileLoop(mixinname,methodname) |
+        res = IfCond(mixinname,methodname)
     )     
     delim = ";"
   
@@ -350,53 +302,19 @@ IInstruction InstructionContext(String mixinname, String methodname):
     }
 }
 
-IInstruction Instruction():
-{ 
-    CInstruction res; 
-    IExpression tmp;
-    Token delim;
-}
-{ 
-    (   
-        LOOKAHEAD(6) res = Assignment() | 
-        LOOKAHEAD(2) tmp = Expression() {res = new CExprInstruction(tmp);}|
-        res = Return() |
-        res = NativeInstruction() |
-        res = WhileLoop() |
-        res = IfCond()
-    )     
-    delim = ";"
-  
-    { 
-        res.PosInProgram = delim.beginLine;
-        res.ProgramFile = FileName;
-        return res; 
-    }
-}
-
-CInstructions InstructionsContext(String mixinname, String methodname):
+CInstructions Instructions(String mixinname, String methodname):
 { 
     CInstructions res= new CInstructions();
     IInstruction instr;
 }
 { 
-    ( LOOKAHEAD(2) instr = InstructionContext(mixinname, methodname) {res.add(instr);})*
-    { return res; }
-}
-
-CInstructions Instructions():
-{ 
-    CInstructions res= new CInstructions();
-    IInstruction instr;
-}
-{ 
-    ( LOOKAHEAD(2) instr = Instruction() {res.add(instr);})*
+    ( LOOKAHEAD(2) instr = Instruction(mixinname, methodname) {res.add(instr);})*
     { return res; }
 }
 
 /* --------------------------- Expressions ------------------------------------- */
 
-CExpressionList ActualParametersContext(String mixinname,String methodname):
+CExpressionList ActualParameters(String mixinname,String methodname):
 {  
     CExpressionList res = new CExpressionList(); 
     IExpression t;
@@ -405,8 +323,8 @@ CExpressionList ActualParametersContext(String mixinname,String methodname):
     "(" 
     
     [ 
-        t=ExpressionContext (mixinname,methodname) {res.add(t);}
-        ("," t=ExpressionContext(mixinname,methodname) {res.add(t);} )* 
+        t=Expression (mixinname,methodname) {res.add(t);}
+        ("," t=Expression(mixinname,methodname) {res.add(t);} )* 
     ]
           
     ")"
@@ -414,39 +332,12 @@ CExpressionList ActualParametersContext(String mixinname,String methodname):
     {return res;}
 }
 
-CExpressionList ActualParameters():
-{  
-    CExpressionList res = new CExpressionList(); 
-    IExpression t;
-}
-{ 
-    "(" 
-    
-    [ 
-        t=Expression () {res.add(t);}
-        ("," t=Expression() {res.add(t);} )* 
-    ]
-          
-    ")"
-   
-    {return res;}
-}
-
-IExpression SuperExpressionContext(String mixinname,String methodname):
+IExpression SuperExpression(String mixinname,String methodname):
 { 
     CExpressionList list;
 }
 { 
-    <SUPER> list = ActualParametersContext(mixinname,methodname) 
-    { return new CSuperCallExpression(list);}
-}
-
-IExpression SuperExpression():
-{ 
-    CExpressionList list;
-}
-{ 
-    <SUPER> list = ActualParameters() 
+    <SUPER> list = ActualParameters(mixinname,methodname) 
     { return new CSuperCallExpression(list);}
 }
 
@@ -456,14 +347,14 @@ IExpression DirectMethodCall(String mixinname,String methodname,IExpression Targ
     CExpressionList list;
 }
 {
-        "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname)
+        "." MethodName = <ID> list = ActualParameters(mixinname,methodname)
         {
             
             HashSet<String> controls = programContext.containsUnambiguousMethod(Target.GetTypeString(),MethodName.image);
             if(controls.size() > 1)
-                throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls);
+                throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls+" at line:"+MethodName.beginLine);
             else if(controls.size() == 0)
-                throw new Error("No method named "+MethodName.image+" for mixin of type "+Target.GetTypeString());
+                throw new Error("No method named "+MethodName.image+" for mixin of type "+Target.GetTypeString()+" at line:"+MethodName.beginLine);
 
             String[] unambiguousMixin = controls.toArray(new String[0]);
 
@@ -479,18 +370,26 @@ IExpression SpecificMethodCallOrSelectAndCall(String mixinname,String methodname
     IExpression secondTarget;
 }
 {
-        "." FirstPart = <ID> "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname) 
+        "." FirstPart = <ID> "." MethodName = <ID> list = ActualParameters(mixinname,methodname) 
         { 
             if(programContext.containsMixin(FirstPart.image)){
                 String typeString = programContext.getMethodReturnType(FirstPart.image,MethodName.image);
+                
+                if(!programContext.containsMixin(FirstPart.image)){
+                    throw new Error("mixin "+FirstPart.image+" has never been declared, error at line:"+FirstPart.beginLine);
+                }
+                if(typeString == null){
+                    throw new Error("No method named "+MethodName.image+" for mixin of type "+FirstPart.image+" at line:"+MethodName.beginLine);
+                }
+                
                 return new CMethodCallExpression(Target, FirstPart.image, MethodName.image, list,typeString);
             }
             
             HashSet<String> controls = programContext.containsUnambiguousField(Target.GetTypeString(),FirstPart.image);
             if(controls.size() > 1)
-                throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls);
+                throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls+" at line:"+MethodName.beginLine);
             else if(controls.size() == 0)
-                throw new Error("No field named "+FirstPart.image+" for mixin of type "+Target.GetTypeString());
+                throw new Error("No field named "+FirstPart.image+" for mixin of type "+Target.GetTypeString()+" at line:"+MethodName.beginLine);
             else{
                 String[] unambiguousMixin = controls.toArray(new String[0]);
                 secondTarget = new CFieldSelectExpression(Target, unambiguousMixin[0], FirstPart.image, programContext.getFieldType(unambiguousMixin[0],FirstPart.image));
@@ -498,9 +397,9 @@ IExpression SpecificMethodCallOrSelectAndCall(String mixinname,String methodname
 
                 controls = programContext.containsUnambiguousMethod(secondTarget.GetTypeString(),MethodName.image);
                 if(controls.size() > 1)
-                    throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls);
+                    throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls+" at line:"+MethodName.beginLine);
                 else if(controls.size() == 0)
-                    throw new Error("No method named "+MethodName.image+" for mixin of type "+secondTarget.GetTypeString());
+                    throw new Error("No method named "+MethodName.image+" for mixin of type "+secondTarget.GetTypeString()+"at line:"+MethodName.beginLine);
                            
 
                 unambiguousMixin = controls.toArray(new String[0]);
@@ -519,17 +418,25 @@ IExpression SpecificSelectOrMethodCall(String mixinname,String methodname,IExpre
     
 }
 {
-    "." FirstPart = <ID> "." SecondPart = <ID> "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname)
+    "." FirstPart = <ID> "." SecondPart = <ID> "." MethodName = <ID> list = ActualParameters(mixinname,methodname)
     {
         if(programContext.containsMixin(FirstPart.image)){ //Specific Selection
             String typeString = programContext.getFieldType(FirstPart.image,SecondPart.image);
+                
+            if(!programContext.containsMixin(FirstPart.image)){
+                throw new Error("mixin "+FirstPart.image+" has never been declared, error at line:"+FirstPart.beginLine);
+            } 
+            if(typeString == null){
+                throw new Error("No field named "+SecondPart.image+" for mixin of type "+FirstPart.image+" at line:"+FirstPart.beginLine);
+            }
+            
             secondTarget =  new CFieldSelectExpression(Target, FirstPart.image, SecondPart.image, typeString);
             
             HashSet<String> controls = programContext.containsUnambiguousMethod(secondTarget.GetTypeString(),MethodName.image);
             if(controls.size() > 1)
-                throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls);
+                throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls+" at line:"+MethodName.beginLine);
             else if(controls.size() == 0)
-                throw new Error("No method named "+MethodName.image+" for mixin of type "+secondTarget.GetTypeString());
+                throw new Error("No method named "+MethodName.image+" for mixin of type "+secondTarget.GetTypeString()+" at line:"+MethodName.beginLine);
                        
             String[] unambiguousMixin = controls.toArray(new String[0]);
 
@@ -542,13 +449,22 @@ IExpression SpecificSelectOrMethodCall(String mixinname,String methodname,IExpre
             
             HashSet<String> controls = programContext.containsUnambiguousField(Target.GetTypeString(),FirstPart.image);
             if(controls.size() > 1)
-                throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls);
+                throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls+" at line:"+MethodName.beginLine);
             else if(controls.size() == 0)
-                throw new Error("No field named "+FirstPart.image+" for mixin of type "+Target.GetTypeString());
+                throw new Error("No field named "+FirstPart.image+" for mixin of type "+Target.GetTypeString()+" at line"+MethodName.beginLine);
             else{
                 String[] unambiguousMixin = controls.toArray(new String[0]);
                 secondTarget = new CFieldSelectExpression(Target, unambiguousMixin[0], FirstPart.image, programContext.getFieldType(unambiguousMixin[0],FirstPart.image));
+
+                String typeString = programContext.getMethodReturnType(SecondPart.image,MethodName.image);
                 
+                if(!programContext.containsMixin(SecondPart.image)){
+                    throw new Error("mixin "+SecondPart.image+" has never been declared, error at line:"+SecondPart.beginLine);
+                }
+                if(typeString == null){
+                    throw new Error("No method named "+MethodName.image+" for mixin of type "+SecondPart.image+" at line:"+MethodName.beginLine);
+                }
+ 
                 return new CMethodCallExpression(secondTarget,SecondPart.image,MethodName.image,list,programContext.getMethodReturnType(SecondPart.image,MethodName.image));
             }
         }        
@@ -564,13 +480,29 @@ IExpression SpecificSelectAndMethodCall(String mixinname,String methodname,IExpr
     IExpression secondTarget;
 }
 {
-    "." MixinName1 = <ID> "." FieldName = <ID> "." MixinName2 = <ID> "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname)
+    "." MixinName1 = <ID> "." FieldName = <ID> "." MixinName2 = <ID> "." MethodName = <ID> list = ActualParameters(mixinname,methodname)
     {
         
         String typeString = programContext.getFieldType(MixinName1.image,FieldName.image);
+        
+        if(!programContext.containsMixin(MixinName1.image)){
+            throw new Error("mixin "+MixinName1.image+" has never been declared, error at line:"+MixinName1.beginLine);
+        }
+        if(typeString == null){
+            throw new Error("No field named "+FieldName.image+" for mixin of type "+MixinName1.image+" at line:"+FieldName.beginLine);
+        }
+
         secondTarget = new CFieldSelectExpression(Target, MixinName1.image, FieldName.image, typeString);
             
         typeString = programContext.getMethodReturnType(MixinName2.image,MethodName.image);
+        
+        if(!programContext.containsMixin(MixinName2.image)){
+            throw new Error("mixin "+MixinName2.image+" has never been declared, error at line:"+MixinName2.beginLine);
+        }
+        if(typeString == null){
+            throw new Error("No method named "+MethodName.image+" for mixin of type "+MixinName2.image+" at line:"+MethodName.beginLine);
+        }
+        
         return new CMethodCallExpression(secondTarget, MixinName2.image, MethodName.image, list,typeString);
         
         return null;
@@ -587,9 +519,9 @@ IExpression DirectSelect(String mixinname,String methodname,IExpression Target):
 
         HashSet<String> controls = programContext.containsUnambiguousField(Target.GetTypeString(),FieldName.image);
         if(controls.size() > 1)
-            throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls);
+            throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls+" at line:"+FieldName.beginLine);
         else if(controls.size() == 0)
-            throw new Error("No field named "+FieldName.image+" for mixin of type "+Target.GetTypeString());
+            throw new Error("No field named "+FieldName.image+" for mixin of type "+Target.GetTypeString()+" at line:"+FieldName.beginLine);
 
         String[] unambiguousMixin = controls.toArray(new String[0]);
         return new CFieldSelectExpression(Target,unambiguousMixin[0],FieldName.image,programContext.getFieldType(unambiguousMixin[0],FieldName.image));
@@ -608,124 +540,7 @@ IExpression SpecificSelect(String mixinname,String methodname,IExpression Target
     }
 }
 
-///////
-
-IExpression MethodCallSuffixContext (String mixinname,String methodname,IExpression Target):
-{ 
-    Token MethodMixin, MethodName; 
-    CExpressionList list;
-}
-{  
-    (
-        LOOKAHEAD(4)
-
-        "." MethodMixin = <ID> "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname) 
-        { 
-            String typeString = programContext.getMethodReturnType(MethodMixin.image,MethodName.image);
-            return new CMethodCallExpression(Target, MethodMixin.image, MethodName.image, list,typeString);
-        } 
-        
-        |
-        
-        "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname)
-        {
-            
-            HashSet<String> controls = programContext.containsUnambiguousMethod(Target.GetTypeString(),MethodName.image);
-            if(controls.size() > 1)
-                throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls);
-            else if(controls.size() == 0)
-                return new CMethodCallExpression(Target, Target.GetTypeString(), MethodName.image, list);
-                       
-
-            String[] unambiguousMixin = controls.toArray(new String[0]);
-
-            return new CMethodCallExpression(Target, unambiguousMixin[0], MethodName.image, list,programContext.getMethodReturnType(unambiguousMixin[0],MethodName.image));
-        }
-    )
-
-    //{
-    //    return ret;
-    //}
-}
-
-///////
-
-IExpression MethodCallSuffix (IExpression Target):
-{ 
-    Token MethodMixin, MethodName; 
-    CExpressionList list;
-}
-{  
-    "." MethodMixin = <ID> "." MethodName = <ID> list = ActualParameters() 
-    { 
-        return new CMethodCallExpression(Target, MethodMixin.image, MethodName.image, list);
-    }
-    
-}
-
-Token nextTokenAfterDot():
-{
-    Token ret;
-}
-{
-    "." ret = <ID>
-    {
-        return ret;
-    }
-}
-
-IExpression FieldSelectSuffixContext(String mixinname,IExpression Target):
-{ 
-    Token FieldName, FirstPart; 
-}
-{
-     
-        /*
-        "." MixinName= <ID> "." FieldName = <ID> 
-        { 
-            String typeString = programContext.getFieldType(MixinName.image,FieldName.image);
-            return new CFieldSelectExpression(Target, MixinName.image, FieldName.image, typeString);
-        }
-
-        |
-        */
-        "." FirstPart = <ID>
-        {
-
-            if(programContext.containsMixin(FirstPart.image)){
-                FieldName = nextTokenAfterDot();
-                
-                String typeString = programContext.getFieldType(FirstPart.image,FieldName.image);
-                return new CFieldSelectExpression(Target, FirstPart.image, FieldName.image, typeString);
-            
-            }
-
-            HashSet<String> controls = programContext.containsUnambiguousField(Target.GetTypeString(),FirstPart.image);
-            if(controls.size() > 1)
-                throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls);
-            else if(controls.size() == 0)
-                return new CFieldSelectExpression(Target, Target.GetTypeString(), FirstPart.image);
-
-            String[] unambiguousMixin = controls.toArray(new String[0]);
-            return new CFieldSelectExpression(Target, unambiguousMixin[0], FirstPart.image, programContext.getFieldType(unambiguousMixin[0],FirstPart.image));
-            
-        }
-    
-}
-
-IExpression FieldSelectSuffix(IExpression Target):
-{ 
-    Token MixinName, FieldName; 
-}
-{ 
-    "." MixinName= <ID> "." FieldName = <ID> 
-    { 
-        String typeString = programContext.getFieldType(MixinName.image,FieldName.image);
-        return new CFieldSelectExpression(Target, MixinName.image, FieldName.image, typeString);
-    }
-}
-
-IExpression BaseExpressionContext(String mixinname, String methodname):
+IExpression BaseExpression(String mixinname, String methodname):
 { 
     IExpression res; 
     Token t;
@@ -733,7 +548,7 @@ IExpression BaseExpressionContext(String mixinname, String methodname):
 { 
     (
         <THIS> {res = new CThisExpression(mixinname);}|                                                                          // Mah, in teoria easy
-        res = SuperExpressionContext(mixinname,methodname) |                                                                     // Gesù
+        res = SuperExpression(mixinname,methodname) |                                                                     // Gesù
         <TRUE> {res = new CBooleanLiteral(true);} |                                                                              // OK
         <FALSE> {res = new CBooleanLiteral(false);} |                                                                            // OK
         t = <BYTE_LITERAL> { res = new CByteLiteral(Byte.parseByte(t.image.substring(2), 16));} |                                // OK
@@ -742,8 +557,8 @@ IExpression BaseExpressionContext(String mixinname, String methodname):
         t = <STRING_LITERAL>  { res = new CStringLiteral (t.image);}  |                                                          // OK
         <NULL> { res = new CNullExpression();}|                                                                                  // Cambiare il tipo
         t = <ID> {res = new CIdentifierExpression(t.image,programContext.getMethodVariableType(mixinname,methodname,t.image));}| // DONE
-        "(" res= ExpressionContext(mixinname,methodname) ")" |                                                                   // OK
-        res = ObjectCreationContext(mixinname,methodname)                                                                        // Cambiare il tipo
+        "(" res= Expression(mixinname,methodname) ")" |                                                                   // OK
+        res = ObjectCreation(mixinname,methodname)                                                                        // Cambiare il tipo
     )  
     
     ( 
@@ -759,8 +574,8 @@ IExpression BaseExpressionContext(String mixinname, String methodname):
         res = DirectMethodCall(mixinname,methodname,res) |
         LOOKAHEAD(2) 
         res = DirectSelect(mixinname,methodname,res)
-        //res = MethodCallSuffixContext (mixinname,methodname,res) |                                                               // Neanche troppoGesù
-        //res = FieldSelectSuffixContext(mixinname,res)                                                                            // In teoria easy (?)
+        //res = MethodCallSuffix (mixinname,methodname,res) |                                                               // Neanche troppoGesù
+        //res = FieldSelectSuffix(mixinname,res)                                                                            // In teoria easy (?)
     )*
   
     { 
@@ -768,174 +583,72 @@ IExpression BaseExpressionContext(String mixinname, String methodname):
     }
 }
 
-IExpression BaseExpression():
-{ 
-    IExpression res; 
-    Token t;
-}
-{ 
-    (
-        <THIS> {res = new CThisExpression();}|
-        res = SuperExpression()|
-        <TRUE> {res = new CBooleanLiteral(true);} |
-        <FALSE> {res = new CBooleanLiteral(false);} |
-        t = <BYTE_LITERAL> { res = new CByteLiteral(Byte.parseByte(t.image.substring(2), 16));} |
-        t = <INTEGER_LITERAL> { res = new CIntegerLiteral(Integer.parseInt(t.image));} |
-        t = <FLOAT_LITERAL> { res = new CFloatLiteral(Float.parseFloat(t.image));} |
-        t = <STRING_LITERAL>  { res = new CStringLiteral (t.image);}  |
-        <NULL> { res = new CNullExpression();}|
-        t = <ID> {res = new CIdentifierExpression(t.image);}|
-        "(" res= Expression() ")" |
-        res = ObjectCreation() 
-    )  
-    
-    ( 
-        LOOKAHEAD(6) 
-        res = MethodCallSuffix (res)|
-        res = FieldSelectSuffix (res)
-    )*
-  
-    { return res;}
-}
-
-IExpression BinaryOperatorSuffixContext(String mixinname,String methodname,IExpression left):
+IExpression BinaryOperatorSuffix(String mixinname,String methodname,IExpression left):
 { 
     IExpression right;
 }
 { 
-    "+" right = BaseExpressionContext(mixinname,methodname) {
+    "+" right = BaseExpression(mixinname,methodname) {
         return new CBinaryExpressionAdd (left, right);
 	} 
     
     |
   
-    "-" right = BaseExpressionContext(mixinname,methodname) {
+    "-" right = BaseExpression(mixinname,methodname) {
 		return new CBinaryExpressionSub (left, right);
     } 
     
     |
   
-    "/" right = BaseExpressionContext(mixinname,methodname) {
+    "/" right = BaseExpression(mixinname,methodname) {
 		return new CBinaryExpressionDivide (left, right);
     } 
 
     |
   
-    "*" right = BaseExpressionContext(mixinname,methodname) {
+    "*" right = BaseExpression(mixinname,methodname) {
 		return new CBinaryExpressionMultiply (left, right);
     } 
     
     |
 
-    "==" right = BaseExpressionContext(mixinname,methodname) {
+    "==" right = BaseExpression(mixinname,methodname) {
         return new CBinaryExpressionStrongEqual (left, right);
     } 
 
     |
 
-    "=" right = BaseExpressionContext(mixinname,methodname) {
+    "=" right = BaseExpression(mixinname,methodname) {
         return new CBinaryExpressionEqual (left, right);
     } 
 
     |
   
-    "<=" right = BaseExpressionContext(mixinname,methodname) {
+    "<=" right = BaseExpression(mixinname,methodname) {
         return new CBinaryExpressionLeq (left, right);
     } 
     
     |
   
-    "<" right = BaseExpressionContext(mixinname,methodname) {
+    "<" right = BaseExpression(mixinname,methodname) {
         return new CBinaryExpressionLess (left, right);
     } 
 
     |
 
-    ">=" right = BaseExpressionContext(mixinname,methodname) {
+    ">=" right = BaseExpression(mixinname,methodname) {
         return new CBinaryExpressionLeq (right, left);
     } 
     
     |
   
-    ">" right = BaseExpressionContext(mixinname,methodname) {
+    ">" right = BaseExpression(mixinname,methodname) {
         return new CBinaryExpressionLess (right, left);
     } 
 
     |
 
-    "!=" right = BaseExpressionContext(mixinname,methodname) {
-        return new CBinaryExpressionNeq (right, left);
-    }
- 
-}
-
-
-IExpression BinaryOperatorSuffix(IExpression left):
-{ 
-    IExpression right;
-}
-{ 
-    "+" right = BaseExpression() {
-	    return new CBinaryExpressionAdd (left, right);
-	} 
-    
-    |
-  
-    "-" right = BaseExpression() {
-		return new CBinaryExpressionSub (left, right);
-    } 
-    
-    |
-  
-    "/" right = BaseExpression() {
-		return new CBinaryExpressionDivide (left, right);
-    } 
-
-    |
-  
-    "*" right = BaseExpression() {
-		return new CBinaryExpressionMultiply (left, right);
-    } 
-    
-    |
-
-    "==" right = BaseExpression() {
-        return new CBinaryExpressionStrongEqual (left, right);
-    } 
-
-    |
-
-    "=" right = BaseExpression() {
-        return new CBinaryExpressionEqual (left, right);
-    } 
-
-    |
-  
-    "<=" right = BaseExpression() {
-        return new CBinaryExpressionLeq (left, right);
-    } 
-    
-    |
-  
-    "<" right = BaseExpression() {
-        return new CBinaryExpressionLess (left, right);
-    } 
-
-    |
-
-    ">=" right = BaseExpression() {
-        return new CBinaryExpressionLeq (right, left);
-    } 
-    
-    |
-  
-    ">" right = BaseExpression() {
-        return new CBinaryExpressionLess (right, left);
-    } 
-
-    |
-
-    "!=" right = BaseExpression() {
+    "!=" right = BaseExpression(mixinname,methodname) {
         return new CBinaryExpressionNeq (right, left);
     }
  
@@ -949,61 +662,39 @@ oggetto, a quel punto probabilmente dovrei effettuare anche un controllo in caso
 operazione binaria!
 
 */
-IExpression ExpressionContext(String mixinname, String methodname):
+IExpression Expression(String mixinname, String methodname):
 { 
     IExpression res;
 }
 { 
-    res = BaseExpressionContext(mixinname,methodname)
+    res = BaseExpression(mixinname,methodname)
     ( 
-        res=BinaryOperatorSuffixContext(mixinname,methodname,res)
+        res=BinaryOperatorSuffix(mixinname,methodname,res)
     )*
     {return res; }
 }
 
-IExpression Expression():
-{ 
-    IExpression res;
-}
-{ 
-    res = BaseExpression()
-    ( 
-        res=BinaryOperatorSuffix(res)
-    )*
-    {return res; }
-}
-
-CInitializationOfParam ActualInitializationOfOneParamContext(String mixinname,String methodname):
+CInitializationOfParam ActualInitializationOfOneParam(String mixinname,String methodname):
 { 
     Token MixinName, ParName; 
     IExpression expr; 
 }
 { 
-    MixinName= <ID> "." ParName= <ID> ":=" expr =ExpressionContext(mixinname,methodname)
+    MixinName= <ID> "." ParName= <ID> ":=" expr =Expression(mixinname,methodname)
     {return new CInitializationOfParam(MixinName.image, ParName.image, expr);}
 }
 
-CInitializationOfParam ActualInitializationOfOneParam():
-{ 
-    Token MixinName, ParName; 
-    IExpression expr; 
-}
-{ 
-    MixinName= <ID> "." ParName= <ID> ":=" expr =Expression()
-    {return new CInitializationOfParam(MixinName.image, ParName.image, expr);}
-}
-
-CInitializationOfParams ActualInitializationOfParamsContext(String mixinname, String methodname):
+CInitializationOfParams ActualInitializationOfParams(String mixinname, String methodname):
 { 
     CInitializationOfParams res = new CInitializationOfParams();
     CInitializationOfParam tmp;
 }
 {  
     [
-        tmp = ActualInitializationOfOneParamContext(mixinname,methodname) 
+        tmp = ActualInitializationOfOneParam(mixinname,methodname) 
         { res.add (tmp);}
         (
-            "," tmp = ActualInitializationOfOneParamContext(mixinname,methodname) 
+            "," tmp = ActualInitializationOfOneParam(mixinname,methodname) 
             {res.add(tmp);}
         )*
     ] 
@@ -1011,43 +702,15 @@ CInitializationOfParams ActualInitializationOfParamsContext(String mixinname, St
     { return res;}
 }
 
-CInitializationOfParams ActualInitializationOfParams():
-{ 
-    CInitializationOfParams res = new CInitializationOfParams();
-    CInitializationOfParam tmp;
-}
-{  
-    [
-        tmp = ActualInitializationOfOneParam() 
-        { res.add (tmp);}
-        (
-            "," tmp = ActualInitializationOfOneParam() 
-            {res.add(tmp);}
-        )*
-    ] 
-   
-    { return res;}
-}
-
-IExpression ObjectCreationContext(String mixinname,String methodname):
+IExpression ObjectCreation(String mixinname,String methodname):
 { 
     IMixinExpression expr; 
     CInitializationOfParams initialization;
 }
 { 
-    <NEW> expr = MixinExpression() "[" initialization = ActualInitializationOfParamsContext(mixinname,methodname) "]"
+    <NEW> expr = MixinExpression() "[" initialization = ActualInitializationOfParams(mixinname,methodname) "]"
     { 
         return new CObjectCreation(expr, initialization); }
-}
-
-IExpression ObjectCreation():
-{ 
-    IMixinExpression expr; 
-    CInitializationOfParams initialization;
-}
-{ 
-    <NEW> expr = MixinExpression() "[" initialization = ActualInitializationOfParams() "]"
-    { return new CObjectCreation(expr, initialization); }
 }
 
 /* --------------------------- GLOBAL DECLARATIONS ------------------------------------- */
@@ -1229,12 +892,12 @@ CVariableDeclarations localVariablesDeclaration():
     { return res;}
 }
 
-CIniModuleSuperInstruction ModuleSuperCall():
+CIniModuleSuperInstruction ModuleSuperCall(String mixinname,String methodname):
 { 
     CInitializationOfParams params;
 }
 { 
-    <SUPER> "[" params=ActualInitializationOfParams() "]" ";" {return new CIniModuleSuperInstruction(params);}
+    <SUPER> "[" params=ActualInitializationOfParams(mixinname,methodname) "]" ";" {return new CIniModuleSuperInstruction(params);}
 }
 
 CIniModuleBody IniModuleBody(String mixinname,String methodname):
@@ -1249,9 +912,9 @@ CIniModuleBody IniModuleBody(String mixinname,String methodname):
     )
   
     <BEGIN>
-        instrs  = InstructionsContext(mixinname,methodname)
-        instr   = ModuleSuperCall()
-        instrs2 = InstructionsContext(mixinname,methodname)
+        instrs  = Instructions(mixinname,methodname)
+        instr   = ModuleSuperCall(mixinname,methodname)
+        instrs2 = Instructions(mixinname,methodname)
     <END>
     
     { 
@@ -1294,7 +957,7 @@ CMethodBody MethodBody(String mixinname, String methodname):
 { 
     ( vars = localVariablesDeclaration() )
     <BEGIN>
-        instrs = InstructionsContext(mixinname,methodname)
+        instrs = Instructions(mixinname,methodname)
     <END>
     { return new CMethodBody (vars, instrs);}
 }
@@ -1446,10 +1109,8 @@ CGlobalDeclarations GlobalDeclarations():
 CProgram Program():
 { 
     CGlobalDeclarations decls ;
-    CInstructions instrs;
 }
 {   
-    decls = GlobalDeclarations()
-    instrs= Instructions() <EOF>
-    {return new CProgram(decls, instrs);}
+    decls = GlobalDeclarations() <EOF>
+    {return new CProgram(decls/*, instrs*/);}
 }

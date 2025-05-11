@@ -9,5 +9,3 @@ mixin MainClass of Object =
     msg.HelloWorld.getMessage().String.print();   // this is a comment
   end;
 end;
-
-(new MainClass[]).MainClass.mainProgram();

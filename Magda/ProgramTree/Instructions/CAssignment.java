@@ -34,9 +34,33 @@ public class CAssignment extends CInstruction{
 
 	public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h){ 
         super.GenCode(o, env, h); 
-	    int t = h.getTemp();
-	    Expr.GenCode(o, env, h, t);
+        
+        StringBuilder str = new StringBuilder(100);
+
+
+        int t = h.getTemp();
+	    
+        Expr.GenCode(o, env, h, t);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("/*--assignment--*/");	    
+
+        o.println(str);
+        str.setLength(0);        
+        
         LVal.GenCode(o, env, h);
-	    o.println(" = " +h.tempAcc(t)+";" );
+	    
+
+        str.append(CGenCodeHelper.tab);        
+
+        str.append("=");
+        str.append(h.tempAcc(t));
+        str.append(";\n");
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("/*--------------*/");	    
+        
+        o.println(str);
+
 	}
 };

@@ -53,7 +53,7 @@ public class CAbstractMethodDeclaration extends CInterfaceMethodDeclaration{
 	}
 
     public void GenCode (java.io.PrintStream o, CMethodEnvironment env, CGenCodeHelper h){ 
-        o.println("//abstract method "+MethodName);
+        o.println(CGenCodeHelper.tab+"//abstract method "+MethodName);
     }
 
 };

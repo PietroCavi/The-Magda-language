@@ -197,11 +197,24 @@ public class CMixinDeclaration implements IDeclaration, ITypeElement{
     }
 
     public void GenCode (java.io.PrintStream o, CEnvironment env, CGenCodeHelper h){ 
-        o.println();
-        o.println(" /* ------- beginning of mixin ["+MixinName+"] --------- */");
-        o.println("curMixin=new CMagdaMixin (\""+MixinName+"\","+String.valueOf(getLayerSize())+");");
+
+        StringBuilder str = new StringBuilder(100);        
+
+        str.append("\n");
+
+        str.append(CGenCodeHelper.tab);
+        str.append("/* ------- beginning of mixin ["+MixinName+"] --------- */\n");
         
-        o.println("curMixin.setSetMethodsFunction( (CMagdaMixinSequence AllSequence, IMagdaObjectElement[] aObjectBody) -> { ");
+        str.append(CGenCodeHelper.tab);
+        str.append("curMixin=new CMagdaMixin (\"");str.append(MixinName);str.append("\",");str.append(String.valueOf(getLayerSize()));str.append(");\n");
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("curMixin.setSetMethodsFunction( (CMagdaMixinSequence AllSequence, IMagdaObjectElement[] aObjectBody) -> {");
+
+        o.println(str);
+        str.setLength(0);
+
+        CGenCodeHelper.addTab();
 
         CMethodEnvironment env2 =  new CMethodEnvironment(env.Decls, this);
   
@@ -210,23 +223,30 @@ public class CMixinDeclaration implements IDeclaration, ITypeElement{
   
         for (int i=0; i<NewMethods.size(); i++)
             NewMethods.get(i).GenCode(o, env2, h);
-  
+ 
         for (int i=0; i<Flds.size(); i++)
             Flds.get(i).GenCode(o, env2, h);
-  
+
+        CGenCodeHelper.removeTab();  
+
         //o.println( " } // end of setMethods");
-        o.println("} ); ");
+        str.append(CGenCodeHelper.tab);
+        str.append("} );\n");
         
-        o.println("CMagdaMixinSequence.globalList.add( curMixin);");
+        str.append(CGenCodeHelper.tab);
+        str.append("CMagdaMixinSequence.globalList.add(curMixin);\n");
         
-        o.println("curMixin.IniModules = new CMagdaIniModule["+ IniModules.size() +"];");
-  
+        str.append(CGenCodeHelper.tab);
+        str.append("curMixin.IniModules = new CMagdaIniModule[");str.append(IniModules.size());str.append("];");
+        
+        o.println(str);        
+ 
         for (int i=0; i< IniModules.size(); i++){ 
-            o.println("curMixin.IniModules["+i+"] = ");
+            o.println(CGenCodeHelper.tab+"curMixin.IniModules["+i+"] = ");
             IniModules.get(i).GenCode(o, env2, h);
         }
   
-        o.println("//end  of new Mixin ["+MixinName+"] ");
+        o.println(CGenCodeHelper.tab+"//end  of new Mixin ["+MixinName+"] ");
     }
 
 
@@ -243,6 +263,12 @@ public class CMixinDeclaration implements IDeclaration, ITypeElement{
     }
 
     public void GenCodeForMixinExpression (java.io.PrintStream o, CEnvironment env, CGenCodeHelper h){ 
-        o.println("tempList.add ("+CodeForMixin()+");");
+        StringBuilder str = new StringBuilder(100);
+        str.append(CGenCodeHelper.tab);
+        str.append("tempList.add (");
+        str.append(CodeForMixin());
+        str.append(");");
+
+        o.println(str);
     }
 }

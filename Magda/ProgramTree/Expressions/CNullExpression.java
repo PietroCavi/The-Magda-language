@@ -20,7 +20,12 @@ public class CNullExpression implements IExpression{
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  
-        o.print(h.tempAcc(target)+"=null;");
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));str.append("=null;");
+
+        o.println(str);
     }
 
 };

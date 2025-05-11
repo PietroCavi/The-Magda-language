@@ -23,7 +23,7 @@ public class CNativeInstruction extends CInstruction{
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h){   
         super.GenCode (o, env, h);
-	    o.println(env.ExpandVariablesInNative(Code) );
+	    o.println(CGenCodeHelper.tab+env.ExpandVariablesInNative(Code) );
     }
 
 };

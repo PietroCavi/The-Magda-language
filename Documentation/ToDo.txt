@@ -4,15 +4,15 @@
 
 3. Mixin Exeption (Keyword throws (?))                                 //DA FARE
 
-4. Rimozione di tutti i warning di compilazione del compiler           //FATTO (*1) 
+4. Rimozione di tutti i warning di compilazione del compiler           //FATTO
 
 5. Rimozione di tutti i warning di compilazione dei programmi generati //FATTO
 
 6. Sostituzione dei Vector con ArrayList nel codice del compiler       //FATTO
 
-7. Rendere più sintatticamente digestibile l'output MagdaProgram.java  //DA FARE
+7. Rendere più sintatticamente digestibile l'output MagdaProgram.java  //FATTO
 
-8. Verificare il funzionamento del plugin di Eclipse                   //NON NECESSARIO PER ORA 
+8. Verificare il funzionamento del plugin di Eclipse                   //NON PIù NECESSARIO 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,9 +28,13 @@
 
 14. Implementazione con le Lambda espressioni dei Mixin, Metodi Override e IniModules                             //FATTO
 
+15. Documentare tutto il codice del progretto per i programmatori futuri                                          //DA FARE
+
 
 
 Nell'immediato:
+
+3, 7, 15, fare bug fixin per le richieste al ProgramContext non andate a buon fine
 
 Capotoli utili della tesi di Jarek:
     
@@ -676,6 +680,126 @@ Ora il linguaggio è più piacevole da usare perchè gode di un'ergonomia format
 
 /*----------------------------------------------------------------------------------------------------*/
 
-Log8 30/04/2025
+Log8 30/04/2025 - 01/05/2025
 
+In questi 2 giorni ho apportato 2 modifiche, una definibile strutturale, l'altra è più una questione di pulizia, vediamole entrambe
 
+* Pulizia *
+
+    Ho eliminato le classi anonime dal programma java risultante come output del compiler, l'avevo già fatto in passato rendendo i CMagdaMethod
+    un'interfaccia invece che una classe astratta, ho applicato questa modifica anche al body degli IniMoudles.
+
+    è stato più difficile invece modificare i metodi Overloaded e i Mixin, perchè contenenti variabili, per farlo ho applicato un paradigma un po'
+    strano. Ho infatti aggiunto un parametro che non è altro che una funzione e ho aggiunto un metodo che faccia da setter per questa funzione, questo
+    setter prenderà in argomento una Lambda, chiamando il vecchio metodo che prima avrei ridefinito con la classe anonima andrò ad eseguire la funzione
+    che invece ho settato grazie al setter, questo mi permette di definire le funzioni e aggiungerle senza dover ricorrere a classi anonime.
+    
+    facciamo un esempio di una classe chiamata Operation:
+
+        abstract class Operation{
+            Integer result;
+            
+            public Integer getResult(){
+                return result;
+            }
+
+            public abstract void doOperation(Integer a,Integer b);
+        } 
+
+    per definire un'istanza di Operation che andasse a fare una somma avrei dovuto creare una classe anonima dove sarei andato a definire doOperation
+    con un body del tipo 'result = a + b', questo è cioò che succedeva grosso modo per la definizione dei Mixin e dei metodi in Override.
+
+    Di per se questo non rappresenta un problema, però risulta in un output poco pulito, prima infatti la compilazione di un semplice programma come
+    MagdaTest (che è tra i programmi presenti nella suite di test di Magda) risultata in 110 file .class, utilizzando comandi come tree per dare
+    un'occhiata ai file risultava davvero brutto.
+
+    Implementando un sistema di Lambda Espressioni per gestire i vari componenti del compiler fa si che 1 file .magda = 1 file .class.
+
+    Passando da 110 file a 1 l'output risulta molto più pulito, e non perdo effettivamente nulla per quanto riguarda i tempi di esecuzione dei programmi
+    Magda (perdo 1 decimo di secondo per quanto riguarda la compilazione effettiva dei file .java di output del compiler, che è un basso prezzo da pagare
+    per una riduzione del genere).
+
+    Modifichiamo ora Operation per far capire come ho agiuto esattamente:
+        
+        class Operation{
+            Integer result;
+
+            BiFunction<Integer,Integer,Integer> op;
+            
+            public Integer getResult(){
+                return result;
+            }
+
+            public void setOperation(BiFunction<Integer,Integer,Integer> op){
+                this.op = op;
+            }
+
+            public void doOperation(Integer a,Integer b){
+                result = op.apply(a,b);
+            }
+        } 
+
+    Così facendo al posto di creare una classe anonima dove andrò a ridefinire doOperation potrò semplicemente creare un'istanza di Operation e utilizzare
+    il metodo setOperation con argomento (a,b) -> {return a+b;}.
+
+* Strutturale *
+
+    La modifica strutturale che ho apportato è stata in realtà molto semplice, ho tolto la possibilità di dichiarare istruzioni al di fuori di un
+    Mixin, allora, se avessi fatto solo questo avrei di fatto rotto tutto, perchè come sappiamo per avviare un programma Magda dovevo creare
+    un'istanza di un Mixin 'main' e dovevo invocare un metodo 'main' per far partire il programma.
+
+    Ora invece è necessario per compilare la presenza di un Mixin chiamato MainClass e un metodo all'interno di questo Mixin chiamato mainProgram,
+    Altrimenti riceveremo un errore di compilazione.
+
+    Perciò ricapitolando per far partire un programma Magda sarà necessaria la presenza di un Mixin chiamato MainClass contenente un metodo chiamato
+    mainProgram, questo metodo sarà il punto di ingresso dei programmi Magda!
+
+    Quali sono i vantaggi di questa modifica?
+    In realtà sono principalmente 3:
+    
+    1. Rende il linguaggio più chiaro da utilizzare togliendo si un po' di libertà dalle mani del programmatore, ma definendo una regola più chiara
+       per l'avviamento dei programmi
+
+    2. Mi ha permesso di effettuare una necessaria pulizia all'interno del Parser, infatti in precedenza avevo infatti raddoppiato i metodi del Parser
+       così da poter fornire una versione che utilizzasse il ProgramContext per la disambiguazione dei metodi e delle variabili e una versione
+       priva di ProgramContext per ciò che si trovava al di fuori dei Mixin; adesso invece c'è solo una versione (che utilizza il ProgramContext)
+
+    3. La soluzione precedente non era da considerarsi solida, infatti le istruzioni dichiarate fuori dai Mixin potevano essere dichiarate solo infondo,
+       non all'inizio e non in mezzo ai Mixin, solo alla fine (altrimenti si sarebbero ottenuti errori di Parsing). Queste istruzioni insomma seguivano
+       una regola poco generale, che non si addice ad un linguaggio con regole chiare e ben definite.
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log9 02/05/2025
+
+Ho fatto un po' di bug fixing realtivo alla modifica strutturale del log di ieri e ho adattato e testato tutti i programmi di esempio/testing presenti
+nella cartella Magda/src, che ovviamente si erano rotti a causa della modifica strutturale apportata.
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log10 05/05/2025-06/05/2025
+
+Ho reso l'output del compilatore completamente indentato così che sia completamente human readable, lavorando al compiler capita che si verifichi degli
+errori di traduzione, banalmente anche il vecchio bug dei valori assoluti negli IniModules l'ho risolto principalmente guardando l'output del compiler.
+
+Adesso che l'output del compilatore è leggibile questi errori saranno significativamente più facili da risolvere.
+
+Ovviamente sapevo che aggiungere tutti quei tab avrebbe causato un costo a livello di performance sul compilatore, quindi ne ho approfittato per utilizzare
+la classe StringBuilder anzichè String per le concatenazioni di stringhe, in questo modo anche se ho aggiunto un sacco di caratteri e di operazioni di
+concatenazione le performance non ne hanno minimamente risentito.
+
+Non mi ricordo più quando l'ho fatto esattamente ma sono riuscito a rimuovere tutti i warning di compilazione, erano rimasti 2 warning dovuti al fatto che
+javacc purtroppo genera codice contenente dei this-escape all'interno dei file *TokenManager.java, questo warning è facilmente risolvibile mettendo queste
+classi a final, tuttavia non si può istruire il java compiler compiler a farlo, probabilmente bisognerebbe modificare il codice e ricompilare l'intera
+libreria.
+
+Come avevo discusso nel Log2 stavo valutando l'opzione di creare uno script che andasse a modificare il file, alla fine è stato l'approccio che ho preso,
+per fortuna documentandomi sui possibili approcci ho scoperto il comando sed eseguibile tramite bash durante la fase di compilazione del compiler.
+
+Quindi ho aggiunto 2 righe all'interno dello script di building chiamato 'make.sh'
+
+ 
+    sed -i -e '0,/class/s//final class/' ./Magda/Parser/ParserTokenManager.java 
+    sed -i -e '0,/class/s//final class/' ./Magda/PreParser/PreParserTokenManager.java 
+
+Queste due istanze di sed vengono eseguite dopo la generazione del codice java da parte di javacc ma prima della compilazione effettiva fatta con javac.

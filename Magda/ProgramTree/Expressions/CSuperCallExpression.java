@@ -35,7 +35,20 @@ public class CSuperCallExpression implements IExpression{
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  
         Params.GenCodeForParams(o, env, h);
-        o.println(h.tempAcc(target)+"= SuperBody.Execute (aSelf, ParamsToPass);}");
+        
+ 
+        StringBuilder str = new StringBuilder(100);
+
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));str.append("= SuperBody.Execute (aSelf, ParamsToPass);\n");
+        
+        //mandatory after the GenCode of an ExpressionList
+        CGenCodeHelper.removeTab();
+
+        str.append(CGenCodeHelper.tab);
+        str.append("}");
+
+        o.println(str);
     }
 
     public void print(java.io.PrintStream o){ 

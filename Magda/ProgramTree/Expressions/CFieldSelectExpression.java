@@ -45,7 +45,20 @@ public class CFieldSelectExpression implements IExpression{
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){
         int Targetplace = h.getTemp();
         SelectTarget.GenCode(o, env, h, Targetplace);
-        o.println(  h.tempAcc(target)+"="+h.tempAcc(Targetplace)+".getStateHolderByName(\""+MixinName+"\","+String.valueOf (env.getMixin(MixinName).getFieldParamOffset(FieldName))+").Value;");
+        
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));
+        str.append("=");
+        str.append(h.tempAcc(Targetplace));
+        str.append(".getStateHolderByName(\"");
+        str.append(MixinName);
+        str.append("\",");
+        str.append(String.valueOf (env.getMixin(MixinName).getFieldParamOffset(FieldName)));
+        str.append(").Value;");
+
+        o.println(str);
     }
 
 };

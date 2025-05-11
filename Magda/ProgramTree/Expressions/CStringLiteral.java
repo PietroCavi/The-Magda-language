@@ -27,7 +27,13 @@ public class  CStringLiteral implements IExpression{
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){
         new CObjectCreation(new CMixinExpressionIdentifier("String"), new CInitializationOfParams()).GenCode(o, env, h, target);
-        o.println ( h.tempAcc(target)+ ".internalPointer ="+Value+";");
+        
+        StringBuilder str = new StringBuilder(100);
+
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));str.append(".internalPointer =");str.append(Value);str.append(";");
+
+        o.println(str);
     }
 
 };

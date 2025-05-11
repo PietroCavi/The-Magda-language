@@ -23,7 +23,7 @@ public class CWhileLoopInstruction extends CInstruction{
 	}
 
     public void print(java.io.PrintStream o){ 
-        o.print("while (");
+        o.print("while(");
 	    expr.print(o);
 	    o.println(")");
 	    instrs.print(o);
@@ -35,10 +35,24 @@ public class CWhileLoopInstruction extends CInstruction{
         super.GenCode(o, env, h); 
 	    int t = h.getTemp();
 	    expr.GenCode(o,env, h, t);
-        o.println(" while ( (Boolean) "+h.tempAcc(t)+".internalPointer) {");
+        
+        StringBuilder str = new StringBuilder(100);
+
+        str.append(CGenCodeHelper.tab);
+        str.append("while ( (Boolean) ");str.append(h.tempAcc(t));str.append(".internalPointer){\n");
+
+        o.println(str);
+        str.setLength(0);
+
+        CGenCodeHelper.addTab();        
         instrs.GenCode(o, env, h);
 	    expr.GenCode(o,env, h, t);
-        o.println ("}");
+        CGenCodeHelper.removeTab();
+
+        str.append(CGenCodeHelper.tab);
+        str.append("}");
+    
+        o.println(str);
 	}
 
 

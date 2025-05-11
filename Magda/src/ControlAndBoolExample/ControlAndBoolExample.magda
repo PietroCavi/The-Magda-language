@@ -38,9 +38,9 @@ mixin test of Object =
 
 end;
 
-mixin FirstClass of Object =
+mixin MainClass of Object =
 
-  new Object firstProgram()
+  new Object mainProgram()
     t:test;
     b:Boolean;
   begin
@@ -60,4 +60,3 @@ mixin FirstClass of Object =
 
 end;
 
-(new FirstClass[]).FirstClass.firstProgram();

@@ -216,7 +216,7 @@ public class CType extends ArrayList<ITypeElement>{
                 CIniModuleDeclaration moddecl=mix.IniModules.get(mod);
                 if (moddecl.activatedBy(localInit) ){ 
                     if (o != null)
-                        o.println("modules.add("+mix.CodeForMixin()+".IniModules["+mod+"]);");
+                        o.println(CGenCodeHelper.tab+"modules.add("+mix.CodeForMixin()+".IniModules["+mod+"]);");
 	            moddecl.modifyParametersList(localInit);
 		        result++;
   	            } 

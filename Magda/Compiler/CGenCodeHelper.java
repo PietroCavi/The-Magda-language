@@ -2,6 +2,17 @@ package Magda.Compiler;
 
 public class CGenCodeHelper{
 
+    public static String tab = "";    
+
+    public static void addTab(){
+        tab += "\t";
+    }
+
+    public static void removeTab(){
+        if(tab.length() > 0)
+            tab = tab.substring(0, tab.length() - 1);
+    }
+
 	int tempCnt=0;
 
 	public void resetTemp(){ 

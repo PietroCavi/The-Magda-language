@@ -27,8 +27,29 @@ public class CParameterDeclaration implements IProgramElem{
     }
 
  	public void GenCode (java.io.PrintStream o, CMethodEnvironment env, CGenCodeHelper h){ 
-        o.println("{ int offset = AllSequence.getMixinOffsetByName(\"" + env.CurrentMixin.MixinName + "\")+"+String.valueOf(env.CurrentMixin.getFieldParamOffset(ParName)) +";");
-        o.println(" aObjectBody[offset] = new CMagdaProperty ();}");
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("{\n");
+
+        CGenCodeHelper.addTab();        
+
+        str.append(CGenCodeHelper.tab);
+        str.append("int offset = AllSequence.getMixinOffsetByName(\"");
+        str.append(env.CurrentMixin.MixinName);
+        str.append("\")+");
+        str.append(String.valueOf(env.CurrentMixin.getFieldParamOffset(ParName)));
+        str.append(";\n");
+        
+        str.append(CGenCodeHelper.tab);
+        o.println("aObjectBody[offset] = new CMagdaProperty ();");
+
+        CGenCodeHelper.removeTab();
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("}");
+
+        o.println(str);
 	}
 
 

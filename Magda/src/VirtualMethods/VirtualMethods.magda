@@ -21,7 +21,15 @@ mixin Extension2 of BaseMixin =
   end;
 end;
 
-(new BaseMixin, Extension1, Extension2  []).BaseMixin.GetActualName ().String.print(); 
-"\n".String.print();
-(new BaseMixin, Extension2, Extension1  []).BaseMixin.GetActualName ().String.print();
+mixin MainClass of Object =
+
+    new void mainProgram()
+    begin
+        (new BaseMixin, Extension1, Extension2  []).BaseMixin.GetActualName().print(); 
+        "\n".print();
+        (new BaseMixin, Extension2, Extension1  []).BaseMixin.GetActualName().print();
+    end;
+
+end;
+
 

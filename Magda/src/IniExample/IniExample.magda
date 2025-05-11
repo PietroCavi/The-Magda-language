@@ -46,7 +46,7 @@ mixin MyMixin of Object =
 end;
 
 mixin MainClass of Object =
-  new void main_matter()
+  new void mainProgram()
     obj1: MyMixin;
   begin
     obj1 := new MyMixin[];
@@ -55,4 +55,4 @@ mixin MainClass of Object =
   end;
 end;
 
-(new MainClass[]).MainClass.main_matter();
+//(new MainClass[]).MainClass.main_matter();

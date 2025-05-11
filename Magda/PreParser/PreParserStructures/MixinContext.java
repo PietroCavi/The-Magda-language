@@ -52,6 +52,12 @@ public class MixinContext{
             return false;
     }
 
+    public boolean emptyMainProgramParams(){
+        if(methodsContext.containsKey("mainProgram"))
+            return methodsContext.get("mainProgram").noParams();
+        return false;
+    }
+
     public void addField(String name, String type){
         fields.put(name,type);
     }
@@ -61,11 +67,15 @@ public class MixinContext{
     }
 
     public String getFieldType(String fieldName){
-        return fields.get(fieldName);
+        if(fields.containsKey(fieldName))
+            return fields.get(fieldName);
+        return null;
     } 
 
     public String getMethodReturnType(String methodName){
-        return methodsContext.get(methodName).getReturnType();
+        if(methodsContext.containsKey(methodName))
+            return methodsContext.get(methodName).getReturnType();
+        return null;
     }
 
     public String getMethodVariableType(String methodName, String variableName){

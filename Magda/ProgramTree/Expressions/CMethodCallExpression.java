@@ -60,13 +60,41 @@ public class CMethodCallExpression implements IExpression{
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  
-        o.println("   // preparing call to method "+MixinName+"."+MethodName);
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("// preparing call to method ");str.append(MixinName);str.append(".");str.append(MethodName);
+
+        o.println(str);
+        str.setLength(0);
+        
         int Target2 = h.getTemp();
         int MethodOffset = env.getMixin(MixinName).getMethodOffset(MethodName);
         MethodTarget.GenCode(o, env, h, Target2);
 
         Params.GenCodeForParams(o, env, h);
-        o.println(h.tempAcc(target)+"="+h.tempAcc(Target2)+".executeMethodByName (\""+ MixinName +"\", " + String.valueOf(MethodOffset) + ", ParamsToPass);}  // call to method "+MixinName+"."+MethodName+" finished ");
+        
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));
+        str.append("=");
+        str.append(h.tempAcc(Target2));
+        str.append(".executeMethodByName (\"");
+        str.append(MixinName);
+        str.append("\", ");
+        str.append(String.valueOf(MethodOffset));
+        str.append(", ParamsToPass);\n");
+       
+        //mandatory after the GenCode of an ExpressionList
+        CGenCodeHelper.removeTab();       
+        
+        str.append(CGenCodeHelper.tab); 
+        str.append("}  // call to method");
+        str.append(MixinName);
+        str.append(".");
+        str.append(MethodName);
+        str.append(" finished ");
+    
+        o.println(str);
     }
 
 };

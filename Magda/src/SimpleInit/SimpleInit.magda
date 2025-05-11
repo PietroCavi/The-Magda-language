@@ -71,4 +71,4 @@ mixin MainClass of Object =
 
 end;
 
-(new MainClass[]).MainClass.mainProgram();
+//(new MainClass[]).MainClass.mainProgram();

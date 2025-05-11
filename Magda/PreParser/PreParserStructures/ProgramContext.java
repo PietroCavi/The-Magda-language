@@ -113,16 +113,32 @@ public class ProgramContext{
 
     }
 
+    public boolean containsMethod(String mixinName,String methodName){
+        if(containsMixin(mixinName))
+            return programContext.get(mixinName).containsMethod(methodName);
+        return false;
+    }
+
+    public boolean emptyMainProgramParams(){
+        if(containsMixin("MainClass"))
+            return programContext.get("MainClass").emptyMainProgramParams();
+        return false;
+    }
+
     public String getIniModuleName(String mixinName, ArrayList<String> params){
         return programContext.get(mixinName).getIniModuleName(params);
     }
 
     public String getFieldType(String mixinName,String fieldName){
-        return programContext.get(mixinName).getFieldType(fieldName);
+        if(programContext.containsKey(mixinName))
+            return programContext.get(mixinName).getFieldType(fieldName);
+        return null;
     }     
 
     public String getMethodReturnType(String mixinName, String methodName){
-        return programContext.get(mixinName).getMethodReturnType(methodName);
+        if(programContext.containsKey(mixinName))
+            return programContext.get(mixinName).getMethodReturnType(methodName);
+        return null;
     }     
 
     public String getMethodVariableType(String mixinName,String methodName,String variableName){

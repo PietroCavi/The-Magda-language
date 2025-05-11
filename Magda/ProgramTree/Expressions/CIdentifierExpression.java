@@ -42,17 +42,25 @@ public class CIdentifierExpression implements IExpression{
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){
-        o.print(h.tempAcc(target)+"=");
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));str.append("=\n");
+
         int i = env.getVariableOffset(Name);
         if (i>=0) {
-            o.println("localVars["+ String.valueOf(i)+"];");
+            str.append(CGenCodeHelper.tab);
+            str.append("localVars[");str.append(String.valueOf(i));str.append("];");
         }
         else {
             i = env.getParameterOffset(Name);
             if (i<0)
                 throw new Error ("Identifier "+Name+" not declared ");
-            o.println("params["+ String.valueOf(i)+"];");
+            str.append(CGenCodeHelper.tab);
+            str.append("params[");str.append(String.valueOf(i));str.append("];");
         }
+
+        o.println(str);
     }
 
 };

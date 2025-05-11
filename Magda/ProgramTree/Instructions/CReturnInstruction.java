@@ -35,7 +35,20 @@ public class CReturnInstruction extends CInstruction{
         super.GenCode(o, env, h); 
 	    int temp= h.getTemp();
 	    Expr.GenCode(o,env,h, temp);
-	    o.println("if (1==1) return "+ h.tempAcc(temp)+";");
+	    
+        StringBuilder str = new StringBuilder(100);
+        str.append("\n");
+        str.append(CGenCodeHelper.tab);
+        str.append("if (true)\n");
+
+        CGenCodeHelper.addTab();   
+     
+        str.append(CGenCodeHelper.tab);
+        str.append("return ");str.append(h.tempAcc(temp));str.append(";");
+
+        CGenCodeHelper.removeTab();
+
+        o.println(str);
 	}
 
 }

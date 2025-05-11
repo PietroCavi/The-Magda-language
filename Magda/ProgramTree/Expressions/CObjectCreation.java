@@ -43,34 +43,85 @@ public class CObjectCreation implements IExpression{
     }
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){  
-        o.print("{ //object creation for: "); MixinExpr.print(o); o.println("");
-        o.println("CMagdaMixinSequence tempList= new CMagdaMixinSequence();");
-        o.println(" tempList.add( CMagdaMixinSequence.globalList.getMixin(\"Object\"));");
+        StringBuilder str = new StringBuilder(100);
+        
+        o.print(CGenCodeHelper.tab+"{ //object creation for: "); MixinExpr.print(o); o.println("");
+
+        CGenCodeHelper.addTab();        
+
+        str.append(CGenCodeHelper.tab);
+        str.append("CMagdaMixinSequence tempList= new CMagdaMixinSequence();\n");
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("tempList.add( CMagdaMixinSequence.globalList.getMixin(\"Object\"));\n");
+
+        o.println(str);
+        str.setLength(0);        
+
         MixinExpr.GenCodeForMixinExpression (o, env,  h);
-        o.println(h.tempAcc(target)+"= tempList.CreateObject();");
-        o.println("}");
+        
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));str.append("= tempList.CreateObject();\n");
+        
+        CGenCodeHelper.removeTab();
+
+        str.append(CGenCodeHelper.tab);
+        str.append("}");
+        
+        o.println(str);
+        str.setLength(0);        
+        
         String IniParamsSetter="";
         
+        CGenCodeHelper.addTab();        
         for (int i=0; i<Init.size(); i++){ 
             int temp = h.getTemp();
             Init.get(i).Expr.GenCode(o, env, h, temp);
-            IniParamsSetter += "IniParamsObjectCreation.putParamValue(\""+Init.get(i).MixinName+"\",\""+Init.get(i).ParamName+"\","+h.tempAcc(temp)+");\n";
+            IniParamsSetter += CGenCodeHelper.tab+"IniParamsObjectCreation.putParamValue(\""+Init.get(i).MixinName+"\",\""+Init.get(i).ParamName+"\","+h.tempAcc(temp)+");\n";
         }
+        CGenCodeHelper.removeTab();        
       
-        o.println("{CMagdaIniParams IniParamsObjectCreation = new CMagdaIniParams();");
-        o.print(IniParamsSetter);
+        str.append(CGenCodeHelper.tab);
+        str.append("{\n");
 
-        o.println("CMagdaIniModules modules = new CMagdaIniModules();");
+        CGenCodeHelper.addTab();
+
+        str.append(CGenCodeHelper.tab);
+        str.append("CMagdaIniParams IniParamsObjectCreation = new CMagdaIniParams();\n");
+        
+        //str.append(CGenCodeHelper.tab;
+        str.append(IniParamsSetter);
+        str.append("\n");
+
+        str.append(CGenCodeHelper.tab);
+        str.append("CMagdaIniModules modules = new CMagdaIniModules();\n");
+        
+        o.println(str);
+        str.setLength(0);        
+        
         int modulecount=MixinExpr.GetType(env).GenCodeForActivatedModules(o, env, h, Init);
         if (modulecount>0){ 
-            o.println("CMagdaIniModule firstModule = modules.remove(0);");
-            o.println("firstModule.Execute("+h.tempAcc(target)+",modules, IniParamsObjectCreation);");
+            str.append(CGenCodeHelper.tab);
+            str.append("CMagdaIniModule firstModule = modules.remove(0);\n");
+        
+            str.append(CGenCodeHelper.tab);
+            str.append("firstModule.Execute(");str.append(h.tempAcc(target));str.append(",modules, IniParamsObjectCreation);\n");
         }
-        o.println("}");
+
+        CGenCodeHelper.removeTab();
+
+        str.append(CGenCodeHelper.tab);
+        str.append("}\n");
 
         /*Init.GenCode(o,  env, h, target);*/
 
-        o.println(h.tempAcc(target)+".executeMethodByName(\"Object\", "+String.valueOf (env.getMixin("Object").getMethodOffset("Init"))+", new CMagdaObject[0]);");
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));
+        str.append(".executeMethodByName(\"Object\", ");
+        str.append(String.valueOf(env.getMixin("Object").getMethodOffset("Init")));
+        str.append(", new CMagdaObject[0]);");
+
+        o.println(str);
 
     }
 

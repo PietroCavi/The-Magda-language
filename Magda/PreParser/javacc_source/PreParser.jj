@@ -118,381 +118,259 @@ TOKEN :
 
 
 /* ----------------- LValues -------------------------*/
-ILValue Field():
+void Field():
 { 
-    Token t1, t2; 
 }
 {
     (
         LOOKAHEAD(6)
-        <THIS> "." t1=<ID> "." t2= <ID>
-        { 
-            return new CFieldLValue(t1.image, t2.image); 
-        }
+        <THIS> "." <ID> "." <ID>
  
         |
 
-        <THIS> "." t1=<ID>
-        {
-        
-            return new CFieldLValue("Not important here",t1.image);
-
-        }
+        <THIS> "." <ID>
     )
 }
 
-ILValue Variable():
+void Variable():
 { 
-    Token t1;
 }
 { 
-    t1=<ID>
-    { return new CVariableLValue(t1.image); }
+    <ID>
 }
 
-ILValue LValue():
+void LValue():
 {
-    ILValue res;
 }
 {  
     ( 
-        res = Field() |
-        res = Variable()
+        Field() |
+        Variable()
     )
-    
-    {return res;}
 }
 
 /* ----------------- Instructions -------------------------*/
-CInstruction Assignment():
+void Assignment():
 { 
-    IExpression expr;
-    ILValue lval;
 }
 { 
-    lval = LValue() ":=" expr = Expression()
-    {return new CAssignment(lval, expr);}
+    LValue() ":=" Expression()
 }
 
 
-CInstruction WhileLoop():
+void WhileLoop():
 { 
-    CInstructions instrs;
-    IExpression expr;}
+}
 { 
-    <WHILE> "(" expr = Expression() ")" instrs = Instructions() <END> 
-    {return new CWhileLoopInstruction(expr, instrs); }
+    <WHILE> "(" Expression() ")" Instructions() <END> 
 }
 
 
-CInstruction IfCond():
+void IfCond():
 { 
-    IExpression cond; 
-    CInstructions trueInstr;
-    CInstructions falseInstr=  new CInstructions();
 }
 { 
-    <IF> "(" cond= Expression() ")"
-    trueInstr = Instructions()
-    [<ELSE>   falseInstr = Instructions() ]
+    <IF> "(" Expression() ")"
+    Instructions()
+    [<ELSE> Instructions() ]
     <END>
-    { return new CIfCondInstruction(cond, trueInstr, falseInstr); }
 }
 
-CInstruction Return():
+void Return():
 {
-    IExpression expr;
 }
 { 
-    <RETURN> expr=Expression()
-    {return new CReturnInstruction(expr);}
+    <RETURN> Expression()
 }
 
-CInstruction NativeInstruction():
+void NativeInstruction():
 { 
-    Token t;
 }
 { 
-    t = <NATIVEINSTRUCTION>
-    { return new CNativeInstruction(t.image); } 
+    <NATIVEINSTRUCTION>
 }
 
-IInstruction Instruction():
+void Instruction():
 { 
-    CInstruction res; 
-    IExpression tmp;
-    Token delim;
 }
 { 
     (   
-        LOOKAHEAD(6) res = Assignment() | 
-        LOOKAHEAD(2) tmp = Expression() {res = new CExprInstruction(tmp);}|
-        res = Return() |
-        res = NativeInstruction() |
-        res = WhileLoop() |
-        res = IfCond()
+        LOOKAHEAD(6) Assignment() | 
+        LOOKAHEAD(2) Expression() |
+        Return() |
+        NativeInstruction() |
+        WhileLoop() |
+        IfCond()
     )     
-    delim = ";"
+    ";"
   
-    { 
-        res.PosInProgram = delim.beginLine;
-        res.ProgramFile = FileName;
-        return res; 
-    }
 }
 
-CInstructions Instructions():
+void Instructions():
 { 
-    CInstructions res= new CInstructions();
-    IInstruction instr;
 }
 { 
-    ( LOOKAHEAD(2) instr = Instruction() {res.add(instr);})*
-    { return res; }
+    ( LOOKAHEAD(2) Instruction())*
 }
 
 /* --------------------------- Expressions ------------------------------------- */
 
-CExpressionList ActualParameters():
+void ActualParameters():
 {  
-    CExpressionList res = new CExpressionList(); 
-    IExpression t;
 }
 { 
     "(" 
     
     [ 
-        t=Expression () {res.add(t);}
-        ("," t=Expression() {res.add(t);} )* 
+        Expression ()
+        ("," Expression() )* 
     ]
           
     ")"
-   
-    {return res;}
 }
 
 
-IExpression SuperExpression():
+void SuperExpression():
 { 
-    CExpressionList list;
 }
 { 
-    <SUPER> list = ActualParameters() 
-    { return new CSuperCallExpression(list);}
+    <SUPER> ActualParameters() 
 }
 
-IExpression MethodCallSuffix (IExpression Target):
+void MethodCallSuffix ():
 { 
-    Token MethodMixin, MethodName; 
-    CExpressionList list;
-    //CMethodCallExpression ret;
 }
 {
     (  
         LOOKAHEAD(3)
         
-        "." MethodMixin = <ID> "." MethodName = <ID> list = ActualParameters() 
-        { 
-            return new CMethodCallExpression(Target, MethodMixin.image, MethodName.image, list);
-        }
+        "." <ID> "." <ID> ActualParameters() 
         
         |
         
-        "." MethodName = <ID> list = ActualParameters()
-        { 
-            return new CMethodCallExpression(Target, "Not important here", MethodName.image, list);
-        }
+        "." <ID> ActualParameters()
     )
     //{
     //    return ret;
     //}
 }
 
-IExpression FieldSelectSuffix(IExpression Target):
+void FieldSelectSuffix():
 { 
-    Token MixinName, FieldName; 
 }
 {
     ( 
         LOOKAHEAD(3)    
 
-        "." MixinName= <ID> "." FieldName = <ID> 
-        { 
-            return new CFieldSelectExpression(Target, MixinName.image, FieldName.image);
-        }
+        "." <ID> "." <ID> 
 
         |
         
-        "." FieldName = <ID>
-        {
-            return new CFieldSelectExpression(Target,"Not important here",FieldName.image);
-        }
+        "." <ID>
     )
 }
 
-IExpression BaseExpression():
+void BaseExpression():
 { 
-    IExpression res; 
-    Token t;
 }
 { 
     (
-        <THIS> {res = new CThisExpression();}|
-        res = SuperExpression()|
-        <TRUE> {res = new CBooleanLiteral(true);} |
-        <FALSE> {res = new CBooleanLiteral(false);} |
-        t = <BYTE_LITERAL> { res = new CByteLiteral(Byte.parseByte(t.image.substring(2), 16));} |
-        t = <INTEGER_LITERAL> { res = new CIntegerLiteral(Integer.parseInt(t.image));} |
-        t = <FLOAT_LITERAL> { res = new CFloatLiteral(Float.parseFloat(t.image));} |
-        t = <STRING_LITERAL>  { res = new CStringLiteral (t.image);}  |
-        <NULL> { res = new CNullExpression();}|
-        t = <ID> {res = new CIdentifierExpression(t.image);}|
-        "(" res= Expression() ")" |
-        res = ObjectCreation() 
+        <THIS> |
+        SuperExpression() |
+        <TRUE> |
+        <FALSE> |
+        <BYTE_LITERAL> |
+        <INTEGER_LITERAL> |
+        <FLOAT_LITERAL> |
+        <STRING_LITERAL> |
+        <NULL> |
+        <ID> |
+        "(" Expression() ")" |
+        ObjectCreation() 
     )  
     
     ( 
         LOOKAHEAD(6) 
-        res = MethodCallSuffix (res)|
-        res = FieldSelectSuffix (res)
+        MethodCallSuffix ()|
+        FieldSelectSuffix ()
     )*
   
-    { return res;}
 }
 
 
-IExpression BinaryOperatorSuffix(IExpression left):
+void BinaryOperatorSuffix():
 { 
-    IExpression right;
 }
 { 
-    "+" right = BaseExpression() {
-		if(right.GetTypeString() != "Integer")
-			return new CBinaryExpressionAdd (left, right);
-		else
-			return new CBinaryExpressionAdd (right, left);
-	} 
-    
+    "+" BaseExpression()     
     |
   
-    "-" right = BaseExpression() {
-		if(right.GetTypeString() != "Integer")
-			return new CBinaryExpressionSub (left, right);
-		else
-			return new CBinaryExpressionSub (right, left);
-    } 
-    
+    "-" BaseExpression()     
     |
   
-    "/" right = BaseExpression() {
-		if(right.GetTypeString() != "Integer")
-			return new CBinaryExpressionDivide (left, right);
-		else
-			return new CBinaryExpressionDivide (right, left);
-    } 
-
+    "/" BaseExpression() 
     |
   
-    "*" right = BaseExpression() {
-		if(right.GetTypeString() != "Integer")
-			return new CBinaryExpressionMultiply (left, right);
-		else
-			return new CBinaryExpressionMultiply (right, left);
-    } 
-    
+    "*" BaseExpression()     
     |
 
-    "==" right = BaseExpression() {
-        return new CBinaryExpressionStrongEqual (left, right);
-    } 
-
+    "==" BaseExpression() 
     |
 
-    "=" right = BaseExpression() {
-        return new CBinaryExpressionEqual (left, right);
-    } 
-
+    "=" BaseExpression() 
     |
   
-    "<=" right = BaseExpression() {
-        return new CBinaryExpressionLeq (left, right);
-    } 
-    
+    "<=" BaseExpression()     
     |
   
-    "<" right = BaseExpression() {
-        return new CBinaryExpressionLess (left, right);
-    } 
-
+    "<" BaseExpression() 
     |
 
-    ">=" right = BaseExpression() {
-        return new CBinaryExpressionLeq (right, left);
-    } 
-    
+    ">=" BaseExpression()     
     |
   
-    ">" right = BaseExpression() {
-        return new CBinaryExpressionLess (right, left);
-    } 
-
+    ">" BaseExpression() 
     |
 
-    "!=" right = BaseExpression() {
-        return new CBinaryExpressionNeq (right, left);
-    }
- 
+    "!=" BaseExpression()  
 }
 
-IExpression Expression():
+void Expression():
 { 
-    IExpression res;
 }
 { 
-    res = BaseExpression()
+    BaseExpression()
     ( 
-        res=BinaryOperatorSuffix(res)
+        BinaryOperatorSuffix()
     )*
-    {return res; }
 }
 
 
-CInitializationOfParam ActualInitializationOfOneParam():
+void ActualInitializationOfOneParam():
 { 
-    Token MixinName, ParName; 
-    IExpression expr; 
 }
 { 
-    MixinName= <ID> "." ParName= <ID> ":=" expr =Expression()
-    {return new CInitializationOfParam(MixinName.image, ParName.image, expr);}
+    <ID> "." <ID> ":=" Expression()
 }
 
-CInitializationOfParams ActualInitializationOfParams():
+void ActualInitializationOfParams():
 { 
-    CInitializationOfParams res = new CInitializationOfParams();
-    CInitializationOfParam tmp;
 }
 {  
     [
-        tmp = ActualInitializationOfOneParam() 
-        { res.add (tmp);}
+        ActualInitializationOfOneParam() 
         (
-            "," tmp = ActualInitializationOfOneParam() 
-            {res.add(tmp);}
+            "," ActualInitializationOfOneParam() 
         )*
     ] 
    
-    { return res;}
 }
 
-IExpression ObjectCreation():
+void ObjectCreation():
 { 
-    IMixinExpression expr; 
-    CInitializationOfParams initialization;
 }
 { 
-    <NEW> expr = MixinExpression() "[" initialization = ActualInitializationOfParams() "]"
-    { return new CObjectCreation(expr, initialization); }
+    <NEW> MixinExpression() "[" ActualInitializationOfParams() "]"
 }
 
 /* --------------------------- GLOBAL DECLARATIONS ------------------------------------- */
@@ -503,22 +381,21 @@ void Declaration(ProgramContext progCont):
 { 
     ( 
         MixinDeclaration(progCont) |
-        res =LetDeclaration()
+        LetDeclaration()
     ) ";"
   
     {return;}
 }
 
-IMixinExpression MixinExpressionOrVoid():
+void MixinExpressionOrVoid():
 { 
-    IMixinExpression res; 
 }
 {  
-    <VOID> { return new CMixinExpressionVoid(); }
+    <VOID>
    
     |
 
-    res = MixinExpression() {return res; }
+    MixinExpression()
    
 }
 
@@ -553,31 +430,26 @@ String MixinExpressionOrVoidContext():
 }
 
 
-IMixinExpression MixinExpressionHOApplication():
+void MixinExpressionHOApplication():
 { 
-    Token t1, t2;
-    IMixinExpression value;
 }
 { 
-    <WHERE> t1=<ID> "." t2=<ID> ":=" "(" value= MixinExpression() ")"
-    {return new CMixinExpressionApplication(t1.image, t2.image, value);}
+    <WHERE> <ID> "." <ID> ":=" "(" MixinExpression() ")"
 }
 
 void MixinExpressionHOApplicationContext():
 { 
-    IMixinExpression value;
 }
 { 
-    <WHERE> <ID> "." <ID> ":=" "(" value = MixinExpression() ")"
+    <WHERE> <ID> "." <ID> ":=" "(" MixinExpression() ")"
     {return;}
 }
 
-IMixinExpression MixinExpressionID():
+void MixinExpressionID():
 { 
-    Token Name;
 }
 {  
-    Name=<ID> {return new CMixinExpressionIdentifier( Name.image);}
+    <ID>
 }
 
 String MixinExpressionIDContext():
@@ -588,32 +460,29 @@ String MixinExpressionIDContext():
     Name=<ID> {return Name.image;}
 }
 
-IMixinExpression MixinExpression():
+void MixinExpression():
 { 
-    IMixinExpression res, temp; 
 }
 { 
-    "(" res = MixinExpression() ")" 
+    "(" MixinExpression() ")" 
 
     |
 
-    res = MixinExpressionID()
+    MixinExpressionID()
   
     (","  
         ( 
-            temp = MixinExpressionID()   | 
-            temp  = MixinExpressionHOApplication() |
-            "(" temp = MixinExpression() ")" 
+            MixinExpressionID()   | 
+            MixinExpressionHOApplication() |
+            "(" MixinExpression() ")" 
         )      
-        { res = new CMixinExpressionConcatenation(res, temp); }
     )*
   
-    { return res;}
+    { return;}
 } 
 
 void MixinExpressionContext(MixinContext mixCont):
 { 
-    IMixinExpression res, temp;
     String ret; 
 }
 { 
@@ -650,8 +519,7 @@ void MixinExpressionContext(MixinContext mixCont):
 
 void FieldDeclaration(MixinContext mixCont):
 { 
-    Token name;
-    Token Type;
+    Token name,Type;
 }
 { 
     name =<ID> ":" Type = <ID> //MixinExpression() 
@@ -664,7 +532,6 @@ void FieldDeclaration(MixinContext mixCont):
 String InputInitializationParameter():
 { 
     Token ParamName1,ParamName2; 
-    IMixinExpression Type;
 }
 { 
     ParamName1 =<ID> ":" ParamName2 = <ID>
@@ -686,29 +553,25 @@ ArrayList<String> InputInitializationParameters():
     { return list; }
 }
 
-CSourceInitializationParameter OutputInitializationParameter():
+void OutputInitializationParameter():
 { 
-    Token MixinName, ParamName; 
 }
 { 
-    MixinName =<ID> "." ParamName =<ID>
-    { return new CSourceInitializationParameter(  MixinName.image, ParamName.image, null ); }
+    <ID> "." <ID>
 }
 
 
-CSourceInitializationParameters  OutputInitializationParameters():
+void OutputInitializationParameters():
 { 
-    CSourceInitializationParameter par;
-    CSourceInitializationParameters list = new CSourceInitializationParameters();
 }
 { 
     "(" 
-        [ par = OutputInitializationParameter() { list.add (par); }
-            ("," par = OutputInitializationParameter() { list.add (par); }
+        [ OutputInitializationParameter() 
+            ("," OutputInitializationParameter() 
             )*
         ]
     ")"
-    { return list; }
+    { return; }
 }
 
 
@@ -716,8 +579,7 @@ CSourceInitializationParameters  OutputInitializationParameters():
 
 void ParameterDecl(MethodContext methCont):
 { 
-    Token Name;
-    Token Type; 
+    Token Name,Type; 
 }
 { 
     Name = <ID> ":" Type = <ID>
@@ -730,8 +592,6 @@ void ParameterDecl(MethodContext methCont):
 
 void ParametersDecl(MethodContext methCont):
 {  
-    CParameterDeclarations res = new CParameterDeclarations(); 
-    CParameterDeclaration decl; 
 }
 { 
     "(" 
@@ -745,26 +605,13 @@ void ParametersDecl(MethodContext methCont):
     {return;}
 }
 
-
-void noop():
-{
-
-}
-{
-    {
-        return;
-    }
-}
-
 void localVariablesDeclaration(MethodContext methCont):
 { 
-    Token Name;
-    Token type;
-    CVariableDeclarations res = new CVariableDeclarations();
+    Token Name,type;
 }
 { 
     ( 
-        Name = <ID> ":" type= <ID> ";" noop()
+        Name = <ID> ":" type= <ID> ";"
         {
             methCont.addVariable(Name.image, type.image);
 
@@ -775,19 +622,15 @@ void localVariablesDeclaration(MethodContext methCont):
     }
 }
 
-CIniModuleSuperInstruction ModuleSuperCall():
+void ModuleSuperCall():
 { 
-    CInitializationOfParams params;
 }
 { 
-    <SUPER> "[" params=ActualInitializationOfParams() "]" ";" {return new CIniModuleSuperInstruction(params);}
+    <SUPER> "[" ActualInitializationOfParams() "]" ";"
 }
 
-CIniModuleBody IniModuleBody(MethodContext methCont):
+void IniModuleBody(MethodContext methCont):
 { 
-    CVariableDeclarations vars = null;
-    CInstructions instrs, instrs2;
-    CInstruction instr;
 }
 { 
     ( 
@@ -795,16 +638,10 @@ CIniModuleBody IniModuleBody(MethodContext methCont):
     )
   
     <BEGIN>
-        instrs  = Instructions()
-        instr   = ModuleSuperCall()
-        instrs2 = Instructions()
+        Instructions()
+        ModuleSuperCall()
+        Instructions()
     <END>
-    
-    { 
-        instrs.add(instr);
-        instrs.addAll( instrs2 );
-        return new CIniModuleBody (vars, instrs);
-    }
 }
 
 
@@ -812,10 +649,6 @@ void IniModuleDeclaration(MixinContext mixCont,String mixinname):
 { 
     Token MixinName;
     ArrayList<String> input;
-    CSourceInitializationParameters output;
-    CIniModuleBody Body;
-
-  
 
     int LineNo = getToken(1).beginLine;
     boolean isRequired;
@@ -847,9 +680,9 @@ void IniModuleDeclaration(MixinContext mixCont,String mixinname):
         methCont.setResType(mixinname); 
 
     } <INITIALIZES> 
-    output = OutputInitializationParameters()
+    OutputInitializationParameters()
 
-    Body = IniModuleBody(methCont)
+    IniModuleBody(methCont)
 
     { return; }
  
@@ -860,12 +693,11 @@ void IniModuleDeclaration(MixinContext mixCont,String mixinname):
 
 void MethodBody(MethodContext methCont):
 { 
-    CVariableDeclarations vars;
-    CInstructions instrs;}
+} 
 { 
     ( localVariablesDeclaration(methCont) )
     <BEGIN>
-        instrs = Instructions()
+        Instructions()
     <END>
     { return;}
 }
@@ -874,9 +706,6 @@ void NewMethodDeclaration(MixinContext mixCont):
 { 
     String ResType; 
     Token name; 
-    CMethodBody body;
-    CParameterDeclarations pars;
-    int linePos = getToken(1).beginLine;
     
     MethodContext methCont = new MethodContext();
 }
@@ -908,9 +737,6 @@ void OverrideMethodDeclaration(MixinContext mixCont):
 { 
     String ResType; 
     Token Mixinname, name; 
-    CMethodBody body;
-    CParameterDeclarations pars;
-    int LineNo = getToken(1).beginLine;
 
     MethodContext methCont = new MethodContext();
 }
@@ -925,50 +751,30 @@ void OverrideMethodDeclaration(MixinContext mixCont):
   
 }
 
-CPolymorphismParam PolymorphismParam():
+void PolymorphismParam():
 { 
-    Token t1;
-    IMixinExpression expr;
 }
 {  
-    t1= <ID> "<=" expr = MixinExpression()
-    {return new CPolymorphismParam(t1.image, expr);}
+    <ID> "<=" MixinExpression()
 }
 
-CPolymorphismParams PolymorphismParams():
+void PolymorphismParams():
 { 
-    CPolymorphismParams res = new CPolymorphismParams();
-    CPolymorphismParam par;
 }
 { 
-    par = PolymorphismParam()  {res.add(par); }
-    (";" par = PolymorphismParam() {res.add(par);} )*
-    {return res;}
+    PolymorphismParam()
+    (";" PolymorphismParam())*
 }
 
 
 void MixinDeclaration(ProgramContext progCont):
 {  
-    IMixinExpression expr; 
     Token mixinname;
-    
-    CFieldDeclaration fld;
-    COverrideMethodDeclaration mtd;
-    INewMethodDeclaration newmtd;
-    CParameterDeclaration paramDecl;
-    CIniModuleDeclaration iniModule;
-
-    CFieldDeclarations flds = new CFieldDeclarations();
-    CMethodDeclarations mtds = new CMethodDeclarations();
-    CNewMethodDeclarations newmtds = new CNewMethodDeclarations();
-    CParameterDeclarations paramDecls = new CParameterDeclarations();
-    CPolymorphismParams polyPars =  new CPolymorphismParams();
-    CIniModuleDeclarations iniModules = new CIniModuleDeclarations();
 
     MixinContext res = new MixinContext();
 }
 { 
-    <MIXIN> mixinname= <ID> ["<" polyPars = PolymorphismParams() ">"] <OF>  LinkedMixins(res)  "="
+    <MIXIN> mixinname= <ID> ["<" PolymorphismParams() ">"] <OF>  LinkedMixins(res)  "="
         ( 
             ( 
                 FieldDeclaration(res) { }
@@ -997,14 +803,11 @@ void MixinDeclaration(ProgramContext progCont):
 
 /* ---------------------  ANOTHER global declarations -------- */
 
-CLetDeclaration LetDeclaration():
+void LetDeclaration():
 { 
-    Token name;
-    IMixinExpression expr;
 }
 { 
-    <LET> name = <ID> "=" expr = MixinExpression() 
-    {return new CLetDeclaration( name.image, expr);}
+    <LET> <ID> "=" MixinExpression() 
 }
 
 ProgramContext IncludedDeclarations():
@@ -1029,7 +832,6 @@ ProgramContext GlobalDeclarations():
 {
     ProgramContext result = new ProgramContext();
     ProgramContext decls = null;
-    IDeclaration decl;
 }
 { 
     ( 
@@ -1043,11 +845,9 @@ ProgramContext GlobalDeclarations():
 ProgramContext Program():
 { 
     ProgramContext decls ;
-    CInstructions instrs;
 }
 {   
     decls = GlobalDeclarations()
-    instrs = Instructions()
     {
         return decls;
     }

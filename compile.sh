@@ -6,7 +6,11 @@ echo
 cp Magda/src/$@/$@.magda ./ > tmp.log
 rm tmp.log
 
-if java Magda.Parser.Parser $@.magda >Magda/src/$@/obj/MagdaProgram.java;then
+if [ ! -d "Magda/src/$@/obj" ]; then
+    mkdir "Magda/src/$@/obj"
+fi
+
+if java Magda.Parser.Parser $@.magda > Magda/src/$@/obj/MagdaProgram.java;then
     rm $@.magda 
 else
     rm $@.magda

@@ -33,6 +33,10 @@ public class MethodContext{
         return ret;
     }
 
+    public boolean noParams(){
+        return params.isEmpty();
+    }
+
     public String toString(){
 
         ArrayList<String> vkeys = new ArrayList<String>(variables.keySet());

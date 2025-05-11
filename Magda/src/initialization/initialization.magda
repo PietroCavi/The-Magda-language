@@ -87,7 +87,7 @@ end;
   Mixin of the main program.
  */
 mixin MainClass of Object =
-  new Object main_matter()
+  new Object mainProgram()
     p1:Point3D;
     p2:Point3D;
   begin
@@ -116,4 +116,3 @@ mixin MainClass of Object =
   end;
 end;
 
-(new MainClass[]).MainClass.main_matter();

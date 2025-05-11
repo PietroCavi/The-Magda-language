@@ -39,11 +39,34 @@ public class CIfCondInstruction extends CInstruction{
         super.GenCode(o, env, h); 
 	    int t = h.getTemp();
 	    Cond.GenCode(o,env, h, t);
-        o.println(" if ( (Boolean) "+h.tempAcc(t)+".internalPointer) {");
+        
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("if ( (Boolean) ");str.append(h.tempAcc(t));str.append(".internalPointer){");
+         
+        o.println(str);
+        str.setLength(0);
+        
+        CGenCodeHelper.addTab();
         TrueInstrs.GenCode(o, env, h);
-        o.println(" } else {");
-	    FalseInstrs.GenCode(o,env, h);
-        o.println ("}");
+        CGenCodeHelper.removeTab();
+
+        str.append(CGenCodeHelper.tab);
+        str.append("}\n");
+        str.append(CGenCodeHelper.tab);
+        str.append("else{");
+        
+        o.println(str);
+        str.setLength(0);
+	    
+        CGenCodeHelper.addTab();
+        FalseInstrs.GenCode(o,env, h);
+        CGenCodeHelper.removeTab();
+        
+        str.append(CGenCodeHelper.tab);
+        str.append("}");
+        o.println(str);
 	}
 
 };

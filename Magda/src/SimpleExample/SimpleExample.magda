@@ -1,14 +1,12 @@
 include "Magdalib/library.magda";
 
-mixin Point2D of Object = 
-  new void TestClass()
+mixin MainClass of Object = 
+  new void mainProgram()
    x:Float;
    y:Integer;  
   begin
    y:=2;
-   x:=y;
+   x:=y.toFloat();
   end;
   
 end;
-
-(new TestClass []).TestClass.main();

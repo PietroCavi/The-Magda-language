@@ -87,6 +87,14 @@ mixin Vec3 of Object =
 end;
 
 mixin Mix1 of Object =
+    
+    tt : Integer;
+
+    new void setTT()
+    begin
+        this.tt:=99999;
+    end;    
+
     new void print()
     begin
         "Mix1\n".String.print();
@@ -143,11 +151,11 @@ mixin Mix3 of Mix2 =
     end;
   
 end;
-
+   
 mixin MainClass of void = 
 
     f3 : Float;
-    
+
     new void mainProgram()
         
         k : Mix3;    
@@ -168,6 +176,11 @@ mixin MainClass of void =
     begin
 
         k := new Mix1,Mix2,Mix3[];    
+        
+        k.setTT();
+
+        k.Mix1.tt.print();
+
         k.Mix1.print();
         //k.Mix2.print();
         //k.Mix3.print();       
@@ -224,5 +237,3 @@ mixin MainClass of void =
 
     end;
 end;
-
-(new MainClass[]).MainClass.mainProgram();

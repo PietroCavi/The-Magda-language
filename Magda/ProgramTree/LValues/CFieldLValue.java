@@ -26,6 +26,12 @@ public class CFieldLValue implements ILValue{
 
 	public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h){ 
         int place = env.getMixin(MixinName).getFieldParamOffset(FieldName);
-        o.print("aSelf.getStateHolderByName(\""+MixinName+"\","+String.valueOf(place)+").Value ");
+        
+        StringBuilder str = new StringBuilder(100);
+
+        str.append(CGenCodeHelper.tab);
+        str.append("aSelf.getStateHolderByName(\"");str.append(MixinName);str.append("\",");str.append(String.valueOf(place));str.append(").Value ");
+        
+        o.println(str);
 	}
 };

@@ -30,7 +30,13 @@ public class CFloatLiteral implements IExpression{
         //OLD VERSION
         //o.println ( h.tempAcc(target)+ ".internalPointer = new Float("+Value+");");
         //NEW VERSION
-        o.println ( h.tempAcc(target)+ ".internalPointer = Float.valueOf((float)"+Value+");");
+        
+        StringBuilder str = new StringBuilder(100);
+        
+        str.append(CGenCodeHelper.tab);
+        str.append(h.tempAcc(target));str.append(".internalPointer = Float.valueOf((float)");str.append(Value);str.append(");");
+
+        o.println(str);
     }
 
 };

@@ -13,16 +13,41 @@ public class CIniModuleBody extends CMemberBody{
 	}
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, String aMixinName, CSourceInitializationParameters InputParams){ 	
-        o.println(" (aSelf, ModulesToExecute, IniParams) -> ");
-        o.println(" { CMagdaObject[] params = new CMagdaObject["+InputParams.size() +"];  //preparing list of input parameters");
+        StringBuilder str = new StringBuilder(100);
+
+        str.append(CGenCodeHelper.tab);
+        str.append("(aSelf, ModulesToExecute, IniParams) -> {");
+
+        CGenCodeHelper.addTab();       
+ 
+        str.append(CGenCodeHelper.tab);
+        str.append("CMagdaObject[] params = new CMagdaObject[");
+        str.append(InputParams.size());
+        str.append("];  //preparing list of input parameters\n");
 		
         for (int i=0; i<InputParams.size(); i++){ 
-            o.println(" params["+i+"] = IniParams.removeParamValue(\""+InputParams.get(i).MixinName+"\",\""+InputParams.get(i).ParName+"\");");
+            str.append(CGenCodeHelper.tab);
+            str.append("params[");
+            str.append(i);
+            str.append("] = IniParams.removeParamValue(\"");
+            str.append(InputParams.get(i).MixinName);
+            str.append("\",\"");
+            str.append(InputParams.get(i).ParName);
+            str.append("\");\n");
 		}
-		
+
+        o.println(str);
+        str.setLength(0);		
+
         super.GenCode(o, env, h, false);
-		o.println("};");
-        o.println(" // end of IniModule of "+aMixinName);
+
+        CGenCodeHelper.removeTab();
+
+        str.append(CGenCodeHelper.tab);
+		str.append("};");
+        str.append(" // end of IniModule of ");str.append(aMixinName);
+
+        o.println(str);
     }
 
 

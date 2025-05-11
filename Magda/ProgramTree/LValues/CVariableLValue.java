@@ -27,16 +27,21 @@ public class CVariableLValue implements ILValue{
 
     public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h){  
         int i = env.getVariableOffset(VarName);
-	    
+
+        StringBuilder str = new StringBuilder(100);	   
+ 
+        str.append(CGenCodeHelper.tab);       
+
         if (i>=0){ 
-            o.println("localVars["+ String.valueOf(i)+"]");
+            str.append("localVars[");str.append(String.valueOf(i));str.append("]");
 	    } 
         else{ 
             i  = env.getParameterOffset(VarName);
 		    if (i<0)
 		        throw new Error ("Identifier "+VarName+" not declared ");
-		    o.println("params["+ String.valueOf(i)+"]");
+		    str.append("params[");str.append(String.valueOf(i));str.append("]");
 	    }
 
+        o.println(str);
     }
 };

@@ -13,7 +13,7 @@
 include "Magdalib/library.magda";
 include "Mixinlib/AdapterRect.magda";
 
-mixin ClientProgram of Object =
+mixin MainClass of Object =
 
   new Object mainProgram()
     rect:AdapterRect;
@@ -30,6 +30,6 @@ mixin ClientProgram of Object =
 
 end;
 
-(new ClientProgram[]).ClientProgram.mainProgram();
+//(new ClientProgram[]).ClientProgram.mainProgram();
 
 
