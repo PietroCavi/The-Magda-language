@@ -83,9 +83,9 @@ mixin Socket of Object =
     message := new String [];
     input := this.Socket.inputObjHandle;
     % try { %;
-    % java.io.DataInputStream is = ((java.io.DataInputStream)$input$.internalPointer); %;
+    % java.io.BufferedReader is = new java.io.BufferedReader( new java.io.InputStreamReader (((java.io.DataInputStream)$input$.internalPointer))); %;
     % String clientInput = is.readLine(); %;
-    % $message$.internalPointer = (String)clientInput; %;
+    % $message$.internalPointer = clientInput; %;
     % } catch(java.io.IOException e) { System.out.println("[CLIENT]ReadString: java.io.IOException!"); } %;
     return message;
   end;
@@ -110,8 +110,8 @@ mixin Socket of Object =
     % try { %;
     % java.io.DataInputStream is = ((java.io.DataInputStream)$input$.internalPointer); %;
     % byte clientInput = is.readByte(); %;
-    % java.lang.Byte clientByte = new java.lang.Byte(clientInput); %;
-    % $dataValue$.internalPointer = (Byte)clientByte; %;
+    % Byte clientByte = (Byte)clientInput; %;
+    % $dataValue$.internalPointer = clientByte; %;
     % } catch(java.io.IOException e) { System.out.println("[CLIENT]ReadByte: java.io.IOException!"); } %;
     return dataValue;
   end;

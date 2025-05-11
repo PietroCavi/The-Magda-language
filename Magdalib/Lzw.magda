@@ -8,16 +8,16 @@ mixin Lzw of Object =
   begin
     res := new Vector, ByteVector[ Vector.size := 0 ];
     uncompressedStr := "";
-    % java.util.Vector in = ((java.util.Vector)$uncompressed$.internalPointer); %;
+    % @SuppressWarnings("unchecked") java.util.Vector<Byte> in = ((java.util.Vector<Byte>)$uncompressed$.internalPointer); %;
     % String result = ""; %;
     % Byte b; %;
     % byte valByte; %;
     % for(int i=0; i<in.size(); i++) { %;
-    %   b = (Byte)in.get(i); %;
+    %   b = in.get(i); %;
     %   valByte = b.byteValue(); %;
     %   result = result + (char)valByte; %;
     % } %;
-    % $uncompressedStr$.internalPointer = (Object)result; %;
+    % $uncompressedStr$.internalPointer = result; %;
     return this.Lzw.compressString(uncompressedStr);
   end;
 
@@ -38,7 +38,7 @@ mixin Lzw of Object =
     % String uncompressed = ((String)$uncompressed$.internalPointer); %;
     % String w = ""; %;
     % char[] uncompressedChars = uncompressed.toCharArray(); %;
-    % java.util.Vector result = new java.util.Vector(0); %;
+    % java.util.Vector<Byte> result = new java.util.Vector<Byte>(0); %;
     % char c; %;
     % String wc; %;
     % int j=0; %;
@@ -58,7 +58,7 @@ mixin Lzw of Object =
     %       valInt = valInt * (-1); %;
     %       valByte = (byte)valInt; %;
     %     } %;
-    %     Byte b = new Byte( valByte ); %;
+    %     Byte b = (Byte) valByte ; %;
     %     result.add(j, b); %;
     %     j++; %;
     %     dictionary.put(wc, dictSize++); %;
@@ -74,10 +74,10 @@ mixin Lzw of Object =
     %     valInt = valInt * (-1); %;
     %     valByte = (byte)valInt; %;
     %   } %;
-    %   Byte b = new Byte( valByte ); %;
+    %   Byte b = (Byte) valByte ; %;
     %   result.add(j, b); %;
     % } %;
-    % $res$.internalPointer = (Object)result; %;
+    % $res$.internalPointer = result; %;
 
     return res;
   end;
@@ -91,13 +91,13 @@ mixin Lzw of Object =
     uncompressedStr := this.Lzw.decompressString(compressed);
     % String in = ((String)$uncompressedStr$.internalPointer); %;
     % byte[] inAsBytes = in.getBytes(); %;
-    % java.util.Vector result = new java.util.Vector(0); %;
+    % java.util.Vector<Byte> result = new java.util.Vector<Byte>(0); %;
     % Byte b; %;
     % for(int i=0; i<inAsBytes.length; i++) { %;
-    %   b = new Byte(inAsBytes[i]); %;
+    %   b = (Byte)inAsBytes[i]; %;
     %   result.add(i, b); %;
     % } %;
-    % $res$.internalPointer = (Object)result; %;
+    % $res$.internalPointer = result; %;
     return res;
   end;
 
@@ -115,7 +115,7 @@ mixin Lzw of Object =
     % } %;
 
     // Act decompression
-    % java.util.Vector compressed = ((java.util.Vector)$compressed$.internalPointer); %;
+    % @SuppressWarnings("unchecked") java.util.Vector<Byte> compressed = ((java.util.Vector<Byte>)$compressed$.internalPointer); %;
     % int valInt = 0; %;
     % byte valByte = 0; %;
     % String w = ""; %;
@@ -123,7 +123,7 @@ mixin Lzw of Object =
     % String entry = ""; %;
     % int listSize = compressed.size(); %;
     % for (int i=0; i<listSize; i++) { %;
-    %   Byte b = (Byte) compressed.get(i); %;
+    %   Byte b = compressed.get(i); %;
     %   valByte = b.byteValue(); %;
     %   if( valByte < 0 ) { %;
     %     valInt = (int) valByte; %;
@@ -146,7 +146,7 @@ mixin Lzw of Object =
     %     w = entry; %;
     %   } %;
     % } %;
-    % $res$.internalPointer = (String)result; %;
+    % $res$.internalPointer = result; %;
 
     return res;
   end;

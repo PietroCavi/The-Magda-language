@@ -6,7 +6,7 @@ mixin UserInput of Object =
     res := new FullInteger [];
     % java.util.Scanner sc = new java.util.Scanner(System.in); %;
     % int i = sc.nextInt(); %;
-    % $res$.internalPointer = new Integer(i); %;
+    % $res$.internalPointer = (Integer)i; %;
     return res;
   end;
 

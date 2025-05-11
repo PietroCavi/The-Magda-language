@@ -1,55 +1,56 @@
-
-
-options {DEBUG_PARSER = false; STATIC=false;}
-
-
+options {
+    DEBUG_PARSER = false; 
+    STATIC=false;
+}
 
 PARSER_BEGIN(Parser)
 
-package Magda.Parser;
+    package Magda.Parser;
 
-import Magda.ProgramTree.LValues.*;
-import Magda.ProgramTree.Declarations.*;
-import Magda.ProgramTree.Instructions.*;
-import Magda.ProgramTree.MixinExpressions.*;
-import Magda.ProgramTree.Expressions.*;
-import Magda.ProgramTree.*;
-import Magda.Compiler.*;
+    import Magda.ProgramTree.LValues.*;
+    import Magda.ProgramTree.Declarations.*;
+    import Magda.ProgramTree.Instructions.*;
+    import Magda.ProgramTree.MixinExpressions.*;
+    import Magda.ProgramTree.Expressions.*;
+    import Magda.ProgramTree.*;
+    import Magda.Compiler.*;
 
-public class Parser {
-  String FileName;
-  
-  static Parser CreateParser( String FileName) throws java.io.FileNotFoundException
-  { Parser res = new Parser ( new java.io.FileInputStream (FileName) );
-    res.FileName = FileName;
-    return res;
-  }
-  
-  public static void main(String args[]) throws ParseException {
-    System.out.println("");
-    System.out.println(" /* --------------------------------------------------------------------- */");
-    System.out.println(" /*  ----- Launching magda compiler  ---- */");
-    Parser parser=null;
-    if (args.length >0) {
-      try {
-      parser = CreateParser( args[0] );
-      } catch (java.io.FileNotFoundException e) 
-      { System.err.println("Brak pliku!");
-        e.printStackTrace();
-      } 
-    }else
-      parser = new Parser(System.in);
-    CProgram prg = parser.Program();
-    System.out.println("/* --- Program successfully parsed and checked - Generating output ---*/");
-    //prg.print(System.out);
-    prg.CheckTypes();
-    prg.GenCode(System.out, new CGenCodeHelper() );
-  }
+    public class Parser {
+        String FileName;
+      
+        static Parser CreateParser( String FileName) throws java.io.FileNotFoundException{ 
+            Parser res = new Parser ( new java.io.FileInputStream (FileName) );
+            res.FileName = FileName;
+            return res;
+        }
+      
+        public static void main(String args[]) throws ParseException {
+            System.out.println("");
+            System.out.println(" /* --------------------------------------------------------------------- */");
+            System.out.println(" /*  ----- Launching magda compiler  ---- */");
+            Parser parser=null;
+            if (args.length >0) {
+                try {
+                    parser = CreateParser( args[0] );
+                } 
+                catch (java.io.FileNotFoundException e) { 
+                    System.err.println("Brak pliku!");
+                    e.printStackTrace();
+                } 
+            }
+            else
+                parser = new Parser(System.in);
+        
+            CProgram prg = parser.Program();
+            System.out.println("/* --- Program successfully parsed and checked - Generating output ---*/");
+            //prg.print(System.out);
+            prg.CheckTypes();
+            prg.GenCode(System.out, new CGenCodeHelper() );
+        }
 
-}
+    }
 
 PARSER_END(Parser)
-
 
 SKIP :
 {
@@ -62,21 +63,24 @@ SKIP :
 /* ---------------- COMMENTS  ---------------- */
 
 MORE :
-{    "//" : IN_SINGLE_LINE_COMMENT
+{    
+     "//" : IN_SINGLE_LINE_COMMENT
   |  "/*" : IN_MULTI_LINE_COMMENT
 }
 
 <IN_SINGLE_LINE_COMMENT> SPECIAL_TOKEN :
-{ <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
+{ 
+    <SINGLE_LINE_COMMENT: "\n" | "\r" | "\r\n" > : DEFAULT
 }
 
 <IN_MULTI_LINE_COMMENT> SPECIAL_TOKEN :
-{  <MULTI_LINE_COMMENT: "*/" > : DEFAULT
+{  
+    <MULTI_LINE_COMMENT: "*/" > : DEFAULT
 }
 
 <IN_SINGLE_LINE_COMMENT,IN_MULTI_LINE_COMMENT> MORE :
 {
-  < ~[] >
+    < ~[] >
 }
 
 /* ---------------- MAIN TOKENS ----------------*/
@@ -109,7 +113,8 @@ TOKEN :
 | < NATIVEINSTRUCTION: "%" (~["%"] | ("\\%") )* "%" >
 | < ID: ["a"-"z","A"-"Z","_"] ( ["a"-"z","A"-"Z","_","0"-"9"] )* >
 | < STRING_LITERAL: "\""    
-     (   (~["\"","\\","\n","\r"]) | 
+     (   
+         (~["\"","\\","\n","\r"]) | 
          ("\\" ( ["n","t","b","r","f","\\","'","\""] | 
          ["0"-"7"] ( ["0"-"7"] )? | 
          ["0"-"3"] ["0"-"7"] ["0"-"7"] ) )      
@@ -130,400 +135,566 @@ TOKEN :
 
 /* ----------------- LValues -------------------------*/
 ILValue Field():
-{ Token t1, t2; }
+{ 
+    Token t1, t2; 
+}
 {
- <THIS> "." t1=<ID> "." t2= <ID>
-  { return new CFieldLValue(t1.image, t2.image); } 
+    <THIS> "." t1=<ID> "." t2= <ID>
+    { return new CFieldLValue(t1.image, t2.image); } 
 }
+
 ILValue Variable():
-{ Token t1;
+{ 
+    Token t1;
 }
-{ t1=<ID>
- { return new CVariableLValue(t1.image); }
+{ 
+    t1=<ID>
+    { return new CVariableLValue(t1.image); }
 }
 
 ILValue LValue():
-{ILValue res;}
-{  ( res = Field() |
-     res = Variable()
+{
+    ILValue res;
+}
+{  
+    ( 
+        res = Field() |
+        res = Variable()
     )
-   {return res;}
+    
+    {return res;}
 }
 
 /* ----------------- Instructions -------------------------*/
 CInstruction Assignment():
-{ IExpression expr;
-  ILValue lval;
+{ 
+    IExpression expr;
+    ILValue lval;
 }
-{ lval = LValue() ":=" expr = Expression()
-  {return new CAssignment(lval, expr);}
+{ 
+    lval = LValue() ":=" expr = Expression()
+    {return new CAssignment(lval, expr);}
 }
 
 
 CInstruction WhileLoop():
-{ CInstructions instrs;
-  IExpression expr;}
-{ <WHILE> "(" expr = Expression() ")" instrs = Instructions() <END> 
-  {return new CWhileLoopInstruction(expr, instrs); }
+{ 
+    CInstructions instrs;
+    IExpression expr;}
+{ 
+    <WHILE> "(" expr = Expression() ")" instrs = Instructions() <END> 
+    {return new CWhileLoopInstruction(expr, instrs); }
 }
 
 
 CInstruction IfCond():
-{ IExpression cond; 
-  CInstructions trueInstr;
-  CInstructions falseInstr=  new CInstructions();
+{ 
+    IExpression cond; 
+    CInstructions trueInstr;
+    CInstructions falseInstr=  new CInstructions();
 }
-{ <IF> "(" cond= Expression() ")"
-  trueInstr = Instructions()
-  [<ELSE>   falseInstr = Instructions() ]
-  <END>
-  { return new CIfCondInstruction(cond, trueInstr, falseInstr); }
+{ 
+    <IF> "(" cond= Expression() ")"
+    trueInstr = Instructions()
+    [<ELSE>   falseInstr = Instructions() ]
+    <END>
+    { return new CIfCondInstruction(cond, trueInstr, falseInstr); }
 }
 
 CInstruction Return():
-{IExpression expr;}
-{ <RETURN> expr=Expression()
-  {return new CReturnInstruction(expr);}
+{
+    IExpression expr;
+}
+{ 
+    <RETURN> expr=Expression()
+    {return new CReturnInstruction(expr);}
 }
 
 CInstruction NativeInstruction():
-{ Token t;}
-{ t = <NATIVEINSTRUCTION>
-  { return new CNativeInstruction(t.image); } 
+{ 
+    Token t;
+}
+{ 
+    t = <NATIVEINSTRUCTION>
+    { return new CNativeInstruction(t.image); } 
 }
 
 IInstruction Instruction():
-{ CInstruction res; 
-  IExpression tmp;
-  Token delim;
+{ 
+    CInstruction res; 
+    IExpression tmp;
+    Token delim;
 }
-{ ( LOOKAHEAD(6) res = Assignment() | 
-    LOOKAHEAD(2) tmp = Expression() {res = new CExprInstruction(tmp);}|
-    res = Return() |
-    res = NativeInstruction() |
-    res = WhileLoop() |
-    res = IfCond()
-  ) delim = ";"
-  { res.PosInProgram = delim.beginLine;
-    res.ProgramFile = FileName;
-    return res; 
-  }
+{ 
+    (   
+        LOOKAHEAD(6) res = Assignment() | 
+        LOOKAHEAD(2) tmp = Expression() {res = new CExprInstruction(tmp);}|
+        res = Return() |
+        res = NativeInstruction() |
+        res = WhileLoop() |
+        res = IfCond()
+    )     
+    delim = ";"
+  
+    { 
+        res.PosInProgram = delim.beginLine;
+        res.ProgramFile = FileName;
+        return res; 
+    }
 }
 
 CInstructions Instructions():
-{ CInstructions res= new CInstructions(); 
-  IInstruction instr;}
-{ ( LOOKAHEAD(2) instr = Instruction() {res.add(instr);})*
-  { return res; }
+{ 
+    CInstructions res= new CInstructions();
+    IInstruction instr;
+}
+{ 
+    ( LOOKAHEAD(2) instr = Instruction() {res.add(instr);})*
+    { return res; }
 }
 
 /* --------------------------- Expressions ------------------------------------- */
 
 CExpressionList ActualParameters():
-{  CExpressionList res = new CExpressionList(); 
-   IExpression t;
+{  
+    CExpressionList res = new CExpressionList(); 
+    IExpression t;
 }
-{ "(" 
-        [ t=Expression () {res.add(t);}
-           ("," t=Expression() {res.add(t);} )* 
-        ]
+{ 
+    "(" 
+    
+    [ 
+        t=Expression () {res.add(t);}
+        ("," t=Expression() {res.add(t);} )* 
+    ]
           
-   ")"
-   {return res;}
+    ")"
+   
+    {return res;}
 }
 
 
 IExpression SuperExpression():
-{ CExpressionList list;
+{ 
+    CExpressionList list;
 }
-{ <SUPER> list = ActualParameters() 
-  { return new CSuperCallExpression(list);}
+{ 
+    <SUPER> list = ActualParameters() 
+    { return new CSuperCallExpression(list);}
 }
 
 IExpression MethodCallSuffix (IExpression Target):
-{ Token MethodMixin, MethodName; 
-  CExpressionList list;
+{ 
+    Token MethodMixin, MethodName; 
+    CExpressionList list;
 }
-{  "." MethodMixin = <ID> "." MethodName = <ID> list = ActualParameters() 
-  { return new CMethodCallExpression(Target, MethodMixin.image, MethodName.image, list);}
+{  
+    "." MethodMixin = <ID> "." MethodName = <ID> list = ActualParameters() 
+    { return new CMethodCallExpression(Target, MethodMixin.image, MethodName.image, list);}
 }
 
 IExpression FieldSelectSuffix(IExpression Target):
-{ Token MixinName, FieldName; }
-{ "." MixinName= <ID> "." FieldName = <ID> 
- { return new CFieldSelectExpression(Target, MixinName.image, FieldName.image);}
+{ 
+    Token MixinName, FieldName; 
+}
+{ 
+    "." MixinName= <ID> "." FieldName = <ID> 
+    { return new CFieldSelectExpression(Target, MixinName.image, FieldName.image);}
 }
 
 IExpression BaseExpression():
-{ IExpression res; 
-  Token t;}
-{ (
-   <THIS> {res = new CThisExpression();}|
-   res = SuperExpression()|
-   <TRUE> {res = new CBooleanLiteral(true);} |
-   <FALSE> {res = new CBooleanLiteral(false);} |
-   t = <BYTE_LITERAL> { res = new CByteLiteral(Byte.parseByte(t.image.substring(2), 16));} |
-   t = <INTEGER_LITERAL> { res = new CIntegerLiteral(Integer.parseInt(t.image));} |
-   t = <FLOAT_LITERAL> { res = new CFloatLiteral(Float.parseFloat(t.image));} |
-   t = <STRING_LITERAL>  { res = new CStringLiteral (t.image);}  |
-   <NULL> { res = new CNullExpression();}|
-   t = <ID> {res = new CIdentifierExpression(t.image);}|
-   "(" res= Expression() ")" |
-   res = ObjectCreation() 
-  )  ( LOOKAHEAD(6) 
-       res = MethodCallSuffix (res)|
-       res = FieldSelectSuffix (res)
-     )*
-  { return res;}
+{ 
+    IExpression res; 
+    Token t;
+}
+{ 
+    (
+        <THIS> {res = new CThisExpression();}|
+        res = SuperExpression()|
+        <TRUE> {res = new CBooleanLiteral(true);} |
+        <FALSE> {res = new CBooleanLiteral(false);} |
+        t = <BYTE_LITERAL> { res = new CByteLiteral(Byte.parseByte(t.image.substring(2), 16));} |
+        t = <INTEGER_LITERAL> { res = new CIntegerLiteral(Integer.parseInt(t.image));} |
+        t = <FLOAT_LITERAL> { res = new CFloatLiteral(Float.parseFloat(t.image));} |
+        t = <STRING_LITERAL>  { res = new CStringLiteral (t.image);}  |
+        <NULL> { res = new CNullExpression();}|
+        t = <ID> {res = new CIdentifierExpression(t.image);}|
+        "(" res= Expression() ")" |
+        res = ObjectCreation() 
+    )  
+    
+    ( 
+        LOOKAHEAD(6) 
+        res = MethodCallSuffix (res)|
+        res = FieldSelectSuffix (res)
+    )*
+  
+    { return res;}
 }
 
 
 IExpression BinaryOperatorSuffix(IExpression left):
-{ IExpression right;
+{ 
+    IExpression right;
 }
-{ "+" right = BaseExpression() {
+{ 
+    "+" right = BaseExpression() {
 		if(right.GetTypeString() != "Integer")
 			return new CBinaryExpressionAdd (left, right);
 		else
 			return new CBinaryExpressionAdd (right, left);
-	} |
-  "-" right = BaseExpression() {
+	} 
+    
+    |
+  
+    "-" right = BaseExpression() {
 		if(right.GetTypeString() != "Integer")
 			return new CBinaryExpressionSub (left, right);
 		else
 			return new CBinaryExpressionSub (right, left);
-  } |
-  "/" right = BaseExpression() {
+    } 
+    
+    |
+  
+    "/" right = BaseExpression() {
 		if(right.GetTypeString() != "Integer")
 			return new CBinaryExpressionDivide (left, right);
 		else
 			return new CBinaryExpressionDivide (right, left);
-  } |
-  "*" right = BaseExpression() {
+    } 
+
+    |
+  
+    "*" right = BaseExpression() {
 		if(right.GetTypeString() != "Integer")
 			return new CBinaryExpressionMultiply (left, right);
 		else
 			return new CBinaryExpressionMultiply (right, left);
-  } |
-  "==" right = BaseExpression() {return new CBinaryExpressionStrongEqual (left, right);} |
-  "=" right = BaseExpression() {return new CBinaryExpressionEqual (left, right);} |
-  "<=" right = BaseExpression() {return new CBinaryExpressionLeq (left, right);} |
-  "<" right = BaseExpression() {return new CBinaryExpressionLess (left, right);} |
-  ">=" right = BaseExpression() {return new CBinaryExpressionLeq (right, left);} |
-  ">" right = BaseExpression() {return new CBinaryExpressionLess (right, left);} |
-  "!=" right = BaseExpression() {return new CBinaryExpressionNeq (right, left);} 
+    } 
+    
+    |
+
+    "==" right = BaseExpression() {
+        return new CBinaryExpressionStrongEqual (left, right);
+    } 
+
+    |
+
+    "=" right = BaseExpression() {
+        return new CBinaryExpressionEqual (left, right);
+    } 
+
+    |
+  
+    "<=" right = BaseExpression() {
+        return new CBinaryExpressionLeq (left, right);
+    } 
+    
+    |
+  
+    "<" right = BaseExpression() {
+        return new CBinaryExpressionLess (left, right);
+    } 
+
+    |
+
+    ">=" right = BaseExpression() {
+        return new CBinaryExpressionLeq (right, left);
+    } 
+    
+    |
+  
+    ">" right = BaseExpression() {
+        return new CBinaryExpressionLess (right, left);
+    } 
+
+    |
+
+    "!=" right = BaseExpression() {
+        return new CBinaryExpressionNeq (right, left);
+    }
+ 
 }
 
 IExpression Expression():
-{ IExpression res;
+{ 
+    IExpression res;
 }
-{ res = BaseExpression()
-  ( res=BinaryOperatorSuffix(res)
-  )*
-  {return res; }
+{ 
+    res = BaseExpression()
+    ( 
+        res=BinaryOperatorSuffix(res)
+    )*
+    {return res; }
 }
 
 
 CInitializationOfParam ActualInitializationOfOneParam():
-{ Token MixinName, ParName; IExpression expr; }
-{ MixinName= <ID> "." ParName= <ID> ":=" expr =Expression()
-  {return new CInitializationOfParam(MixinName.image, ParName.image, expr);}
+{ 
+    Token MixinName, ParName; 
+    IExpression expr; 
+}
+{ 
+    MixinName= <ID> "." ParName= <ID> ":=" expr =Expression()
+    {return new CInitializationOfParam(MixinName.image, ParName.image, expr);}
 }
 
 CInitializationOfParams ActualInitializationOfParams():
-{ CInitializationOfParams res = new CInitializationOfParams();
-  CInitializationOfParam tmp;
+{ 
+    CInitializationOfParams res = new CInitializationOfParams();
+    CInitializationOfParam tmp;
 }
-{  [
+{  
+    [
         tmp = ActualInitializationOfOneParam() 
         { res.add (tmp);}
-        ("," tmp = ActualInitializationOfOneParam() 
-             {res.add(tmp);}
+        (
+            "," tmp = ActualInitializationOfOneParam() 
+            {res.add(tmp);}
         )*
-      ] 
+    ] 
    
-   { return res;}
+    { return res;}
 }
 
 IExpression ObjectCreation():
-{ IMixinExpression expr; 
-  CInitializationOfParams initialization;
+{ 
+    IMixinExpression expr; 
+    CInitializationOfParams initialization;
 }
-{ <NEW> expr = MixinExpression() "[" initialization = ActualInitializationOfParams() "]"
-  { return new CObjectCreation(expr, initialization); }
+{ 
+    <NEW> expr = MixinExpression() "[" initialization = ActualInitializationOfParams() "]"
+    { return new CObjectCreation(expr, initialization); }
 }
 
 /* --------------------------- GLOBAL DECLARATIONS ------------------------------------- */
 IDeclaration Declaration():
-{ IDeclaration res;}
-{ ( res =MixinDeclaration() |
-    res =LetDeclaration()
-  ) ";"
-  {return res;}
+{ 
+    IDeclaration res;
+}
+{ 
+    ( 
+        res =MixinDeclaration() |
+        res =LetDeclaration()
+    ) ";"
+  
+    {return res;}
 }
 
 
 IMixinExpression MixinExpressionOrVoid():
-{ IMixinExpression res; 
+{ 
+    IMixinExpression res; 
 }
-{  <VOID> { return new CMixinExpressionVoid(); }
-   |
-   res = MixinExpression() {return res; }
+{  
+    <VOID> { return new CMixinExpressionVoid(); }
+   
+    |
+
+    res = MixinExpression() {return res; }
    
 }
 
 
 IMixinExpression MixinExpressionHOApplication():
-{ Token t1, t2;
-  IMixinExpression value;
+{ 
+    Token t1, t2;
+    IMixinExpression value;
 }
-{ <WHERE> t1=<ID> "." t2=<ID> ":=" "(" value= MixinExpression() ")"
-  {return new CMixinExpressionApplication(t1.image, t2.image, value);}
+{ 
+    <WHERE> t1=<ID> "." t2=<ID> ":=" "(" value= MixinExpression() ")"
+    {return new CMixinExpressionApplication(t1.image, t2.image, value);}
 }
 
 IMixinExpression MixinExpressionID():
-{ Token Name;
+{ 
+    Token Name;
 }
-{  Name=<ID> {return new CMixinExpressionIdentifier( Name.image);}
+{  
+    Name=<ID> {return new CMixinExpressionIdentifier( Name.image);}
 }
 
 IMixinExpression MixinExpression():
-{ IMixinExpression res, temp; }
 { 
-  "(" res = MixinExpression() ")" |
-  res = MixinExpressionID()  
-  (","  
-     ( temp = MixinExpressionID()   | 
-       temp  = MixinExpressionHOApplication() |
-       "(" temp = MixinExpression() ")" 
-     )   { res = new CMixinExpressionConcatenation(res, temp); }
-  )*
-  { return res;}
+    IMixinExpression res, temp; 
+}
+{ 
+    "(" res = MixinExpression() ")" 
+
+    |
+
+    res = MixinExpressionID()
+  
+    (","  
+        ( 
+            temp = MixinExpressionID()   | 
+            temp  = MixinExpressionHOApplication() |
+            "(" temp = MixinExpression() ")" 
+        )      
+        { res = new CMixinExpressionConcatenation(res, temp); }
+    )*
+  
+    { return res;}
 } 
 
 /*  ---------------- CLASS MEMBERS ---------------- */
 
 CFieldDeclaration FieldDeclaration():
-{ Token name;
-  IMixinExpression Type;}
-{ name =<ID> ":" Type = MixinExpression() 
-  {return new CFieldDeclaration(name.image, Type);} 
+{ 
+    Token name;
+    IMixinExpression Type;
+}
+{ 
+    name =<ID> ":" Type = MixinExpression() 
+    {return new CFieldDeclaration(name.image, Type);} 
 }
 
 CSourceInitializationParameter InputInitializationParameter(String MixinName):
-{ Token ParamName; 
-  IMixinExpression Type;
+{ 
+    Token ParamName; 
+    IMixinExpression Type;
 }
-{ ParamName =<ID> ":" Type = MixinExpression()
-  { return new CSourceInitializationParameter(  MixinName, ParamName.image, Type ); }
+{ 
+    ParamName =<ID> ":" Type = MixinExpression()
+    { return new CSourceInitializationParameter(  MixinName, ParamName.image, Type ); }
 }
 
 CSourceInitializationParameters  InputInitializationParameters(String MixinName):
-{ CSourceInitializationParameter par;
-  CSourceInitializationParameters list = new CSourceInitializationParameters();
+{ 
+    CSourceInitializationParameter par;
+    CSourceInitializationParameters list = new CSourceInitializationParameters();
 }
-{ "(" [ par = InputInitializationParameter(MixinName) { list.add (par); }
+{ 
+    "(" 
+    [ par = InputInitializationParameter(MixinName) { list.add (par); }
         (";" par = InputInitializationParameter(MixinName) { list.add (par); }
         )* 
-     ]
-   ")"
-  { return list; }
+    ]
+    ")"
+    { return list; }
 }
 
 CSourceInitializationParameter OutputInitializationParameter():
-{ Token MixinName, ParamName; 
+{ 
+    Token MixinName, ParamName; 
 }
-{ MixinName =<ID> "." ParamName =<ID>
-  { return new CSourceInitializationParameter(  MixinName.image, ParamName.image, null ); }
+{ 
+    MixinName =<ID> "." ParamName =<ID>
+    { return new CSourceInitializationParameter(  MixinName.image, ParamName.image, null ); }
 }
 
 
 CSourceInitializationParameters  OutputInitializationParameters():
-{ CSourceInitializationParameter par;
-  CSourceInitializationParameters list = new CSourceInitializationParameters();
+{ 
+    CSourceInitializationParameter par;
+    CSourceInitializationParameters list = new CSourceInitializationParameters();
 }
-{ "(" [ par = OutputInitializationParameter() { list.add (par); }
-        ("," par = OutputInitializationParameter() { list.add (par); }
-        )*
-      ]
-   ")"
-  { return list; }
+{ 
+    "(" 
+        [ par = OutputInitializationParameter() { list.add (par); }
+            ("," par = OutputInitializationParameter() { list.add (par); }
+            )*
+        ]
+    ")"
+    { return list; }
 }
 
 
 
 
 CParameterDeclaration ParameterDecl():
-{ Token Name; IMixinExpression Type; }
-{ Name = <ID> ":" Type =MixinExpression()
-  { return new CParameterDeclaration(Name.image, Type); }
+{ 
+    Token Name; IMixinExpression Type; 
+}
+{ 
+    Name = <ID> ":" Type =MixinExpression()
+    { return new CParameterDeclaration(Name.image, Type); }
 }
 
 
 CParameterDeclarations ParametersDecl():
-{  CParameterDeclarations res = new CParameterDeclarations(); 
-   CParameterDeclaration decl; }
-{ "(" 
-  [ decl = ParameterDecl() 
-          { res.add(decl); }
-    (";" decl = ParameterDecl()
-               { res.add(decl); }
-    )*
- ]
-  ")"
-  {return res;}
+{  
+    CParameterDeclarations res = new CParameterDeclarations(); 
+    CParameterDeclaration decl; 
+}
+{ 
+    "(" 
+        [ decl = ParameterDecl() 
+            { res.add(decl); }
+            (";" decl = ParameterDecl()
+                { res.add(decl); }
+            )*
+        ]
+    ")"
+    {return res;}
 }
 
 
 
 CVariableDeclarations localVariablesDeclaration():
-{ Token Name;
-  IMixinExpression type;
-  CVariableDeclarations res = new CVariableDeclarations();
+{ 
+    Token Name;
+    IMixinExpression type;
+    CVariableDeclarations res = new CVariableDeclarations();
 }
-{ ( Name = <ID> ":" type= MixinExpression() ";"
-    { res.add ( new CVariableDeclaration (Name.image, type) ); }
-  )*
-  { return res;}
+{ 
+    ( 
+        Name = <ID> ":" type= MixinExpression() ";"
+        { res.add ( new CVariableDeclaration (Name.image, type) ); }
+    )*
+    { return res;}
 }
 
 CIniModuleSuperInstruction ModuleSuperCall():
-{ CInitializationOfParams params;
+{ 
+    CInitializationOfParams params;
 }
-{ <SUPER> "[" params=ActualInitializationOfParams() "]" ";" {return new CIniModuleSuperInstruction(params);}
+{ 
+    <SUPER> "[" params=ActualInitializationOfParams() "]" ";" {return new CIniModuleSuperInstruction(params);}
 }
 
 CIniModuleBody IniModuleBody():
-{ CVariableDeclarations vars;
-  CInstructions instrs, instrs2;
-  CInstruction instr;
+{ 
+    CVariableDeclarations vars;
+    CInstructions instrs, instrs2;
+    CInstruction instr;
 }
-{ ( vars = localVariablesDeclaration() )
-  <BEGIN>
-  instrs  = Instructions()
-  instr   = ModuleSuperCall()
-  instrs2 = Instructions()
-  <END>
-  { instrs.add(instr);
-    instrs.addAll( instrs2 );
-    return new CIniModuleBody (vars, instrs);}
+{ 
+    ( 
+        vars = localVariablesDeclaration() 
+    )
+  
+    <BEGIN>
+        instrs  = Instructions()
+        instr   = ModuleSuperCall()
+        instrs2 = Instructions()
+    <END>
+    
+    { 
+        instrs.add(instr);
+        instrs.addAll( instrs2 );
+        return new CIniModuleBody (vars, instrs);
+    }
 }
 
 
 CIniModuleDeclaration IniModuleDeclaration():
-{ Token MixinName;
-  CSourceInitializationParameters input, output;
-  CIniModuleBody Body;
-  int LineNo = getToken(1).beginLine;
-  boolean isRequired;
+{ 
+    Token MixinName;
+    CSourceInitializationParameters input, output;
+    CIniModuleBody Body;
+  
+    int LineNo = getToken(1).beginLine;
+    boolean isRequired;
 }
-{ ( <REQUIRED> {isRequired=true;} | <OPTIONAL> {isRequired=false;} ) MixinName = <ID> 
-   input = InputInitializationParameters(MixinName.image) <INITIALIZES> 
-   output = OutputInitializationParameters()
+{ 
+    ( <REQUIRED> {isRequired=true;} | <OPTIONAL> {isRequired=false;} ) MixinName = <ID> 
+    input = InputInitializationParameters(MixinName.image) <INITIALIZES> 
+    output = OutputInitializationParameters()
 
-   Body = IniModuleBody()
+    Body = IniModuleBody()
 
-   { return new CIniModuleDeclaration(isRequired, MixinName.image, input, output, Body, LineNo, FileName);}
+    { return new CIniModuleDeclaration(isRequired, MixinName.image, input, output, Body, LineNo, FileName);}
  
 }
 
@@ -531,131 +702,167 @@ CIniModuleDeclaration IniModuleDeclaration():
 /* --------------------------- METHOD DECLARATIONS ------------------------------------- */
 
 CMethodBody MethodBody():
-{ CVariableDeclarations vars;
-  CInstructions instrs;}
-{ ( vars = localVariablesDeclaration() )
-  <BEGIN>
-  instrs = Instructions()
-  <END>
-  { return new CMethodBody (vars, instrs);}
+{ 
+    CVariableDeclarations vars;
+    CInstructions instrs;}
+{ 
+    ( vars = localVariablesDeclaration() )
+    <BEGIN>
+        instrs = Instructions()
+    <END>
+    { return new CMethodBody (vars, instrs);}
 }
 
 INewMethodDeclaration NewMethodDeclaration():
-{ IMixinExpression ResType; 
-  Token name; 
-  CMethodBody body;
-  CParameterDeclarations pars;
-  int linePos = getToken(1).beginLine;
+{ 
+    IMixinExpression ResType; 
+    Token name; 
+    CMethodBody body;
+    CParameterDeclarations pars;
+    int linePos = getToken(1).beginLine;
 }
 {  
- ( <ABSTRACT> ResType= MixinExpressionOrVoid() name = <ID> pars=ParametersDecl() 
-   {return new CAbstractMethodDeclaration(ResType, name.image, pars, linePos, FileName); }
- |
-  <NEW> ResType= MixinExpressionOrVoid() name=<ID> pars= ParametersDecl() body= MethodBody() 
-   {return  new CNewMethodDeclaration(ResType, name.image, pars, body, linePos, FileName); }
-   )
+    ( 
+        <ABSTRACT> ResType= MixinExpressionOrVoid() name = <ID> pars=ParametersDecl() 
+        {return CAbstractMethodDeclaration.createCAbstractMethodDeclaration(ResType, name.image, pars, linePos, FileName); }
+        
+        |
+
+        <NEW> ResType= MixinExpressionOrVoid() name=<ID> pars= ParametersDecl() body= MethodBody() 
+        {return  CNewMethodDeclaration.createCNewMethodDeclaration(ResType, name.image, pars, body, linePos, FileName); }
+    )
 }
 
 COverrideMethodDeclaration OverrideMethodDeclaration():
-{ IMixinExpression ResType; 
-  Token Mixinname, name; 
-  CMethodBody body;
-  CParameterDeclarations pars;
-  int LineNo = getToken(1).beginLine;
+{ 
+    IMixinExpression ResType; 
+    Token Mixinname, name; 
+    CMethodBody body;
+    CParameterDeclarations pars;
+    int LineNo = getToken(1).beginLine;
 }
 { 
-  <OVERRIDE> ResType=MixinExpressionOrVoid() Mixinname= <ID> "." name=<ID>  pars=ParametersDecl()  body= MethodBody() 
-   {return new COverrideMethodDeclaration(ResType, Mixinname.image, name.image, pars, body, LineNo, FileName); }
+    <OVERRIDE> ResType=MixinExpressionOrVoid() Mixinname= <ID> "." name=<ID>  pars=ParametersDecl()  body= MethodBody() 
+    {return COverrideMethodDeclaration.createCOverrideMethodDeclaration(ResType, Mixinname.image, name.image, pars, body, LineNo, FileName); }
   
 }
 
 CPolymorphismParam PolymorphismParam():
-{ Token t1;
-  IMixinExpression expr;
+{ 
+    Token t1;
+    IMixinExpression expr;
 }
-{  t1= <ID> "<=" expr = MixinExpression()
-  {return new CPolymorphismParam(t1.image, expr);}
+{  
+    t1= <ID> "<=" expr = MixinExpression()
+    {return new CPolymorphismParam(t1.image, expr);}
 }
 
 CPolymorphismParams PolymorphismParams():
-{ CPolymorphismParams res = new CPolymorphismParams();
-  CPolymorphismParam par;
+{ 
+    CPolymorphismParams res = new CPolymorphismParams();
+    CPolymorphismParam par;
 }
-{ par = PolymorphismParam()  {res.add(par); }
-   (";" par = PolymorphismParam() {res.add(par);} )*
-  {return res;}
+{ 
+    par = PolymorphismParam()  {res.add(par); }
+    (";" par = PolymorphismParam() {res.add(par);} )*
+    {return res;}
 }
 
 
 IDeclaration MixinDeclaration():
-{  IMixinExpression expr; Token mixinname;
-   CFieldDeclaration fld;
-   COverrideMethodDeclaration mtd;
-   INewMethodDeclaration newmtd;
-   CParameterDeclaration paramDecl;
-   CIniModuleDeclaration iniModule;
+{  
+    IMixinExpression expr; 
+    Token mixinname;
+    
+    CFieldDeclaration fld;
+    COverrideMethodDeclaration mtd;
+    INewMethodDeclaration newmtd;
+    CParameterDeclaration paramDecl;
+    CIniModuleDeclaration iniModule;
 
-   CFieldDeclarations flds = new CFieldDeclarations();
-   CMethodDeclarations mtds = new CMethodDeclarations();
-   CNewMethodDeclarations newmtds = new CNewMethodDeclarations();
-   CParameterDeclarations paramDecls = new CParameterDeclarations();
-   CPolymorphismParams polyPars =  new CPolymorphismParams();
-   CIniModuleDeclarations iniModules = new CIniModuleDeclarations();
+    CFieldDeclarations flds = new CFieldDeclarations();
+    CMethodDeclarations mtds = new CMethodDeclarations();
+    CNewMethodDeclarations newmtds = new CNewMethodDeclarations();
+    CParameterDeclarations paramDecls = new CParameterDeclarations();
+    CPolymorphismParams polyPars =  new CPolymorphismParams();
+    CIniModuleDeclarations iniModules = new CIniModuleDeclarations();
 }
-{ <MIXIN> mixinname= <ID> ["<" polyPars = PolymorphismParams() ">"] <OF>  expr = MixinExpressionOrVoid()  "="
-    ( ( fld = FieldDeclaration() {flds.add(fld);}
-      |
-        mtd = OverrideMethodDeclaration() {mtds.add(mtd);}
-      |
-        newmtd = NewMethodDeclaration() {newmtds.add(newmtd);}
-      |
-       iniModule = IniModuleDeclaration() {iniModules.add(iniModule);}
-       ) ";"
-    ) *
-  <END> 
-  { return new CMixinDeclaration(mixinname.image, expr, flds, newmtds, mtds, iniModules, polyPars); }
+{ 
+    <MIXIN> mixinname= <ID> ["<" polyPars = PolymorphismParams() ">"] <OF>  expr = MixinExpressionOrVoid()  "="
+        ( 
+            ( 
+                fld = FieldDeclaration() {flds.add(fld);}
+                
+                |
+
+                mtd = OverrideMethodDeclaration() {mtds.add(mtd);}
+          
+                |
+        
+                newmtd = NewMethodDeclaration() {newmtds.add(newmtd);}
+                
+                |
+           
+                iniModule = IniModuleDeclaration() {iniModules.add(iniModule);}
+           ) ";"
+        ) *
+    <END> 
+    
+    { return CMixinDeclaration.createCMixinDeclaration(mixinname.image, expr, flds, newmtds, mtds, iniModules, polyPars); }
 }
 
 /* ---------------------  ANOTHER global declarations -------- */
 
 CLetDeclaration LetDeclaration():
-{ Token name;
-  IMixinExpression expr;
+{ 
+    Token name;
+    IMixinExpression expr;
 }
-{ <LET> name = <ID> "=" expr = MixinExpression() 
-       {return new CLetDeclaration( name.image, expr);}
+{ 
+    <LET> name = <ID> "=" expr = MixinExpression() 
+    {return new CLetDeclaration( name.image, expr);}
 }
 
 CGlobalDeclarations IncludedDeclarations():
-{ Token t;
-  String fname=" --unknown--";
+{ 
+    Token t;
+    String fname=" --unknown--";
 }
-{ <INCLUDE> t=<STRING_LITERAL>";"
-  { try{ 
-      fname=t.image.substring(1,t.image.length()-1);
-      return CreateParser( fname ).GlobalDeclarations();
-    } catch (Exception exc)
-    { throw new Error ("Error in file "+fname+ ":"+exc.toString());
-    };
-  }
+{ 
+    <INCLUDE> t=<STRING_LITERAL>";"
+    { 
+        try{ 
+            fname=t.image.substring(1,t.image.length()-1);
+            return CreateParser( fname ).GlobalDeclarations();
+        } 
+        catch (Exception exc){ 
+            throw new Error ("Error in file "+fname+ ":"+exc.toString());
+        };
+    }
 }
 
 CGlobalDeclarations GlobalDeclarations():
-{ CGlobalDeclarations result = new CGlobalDeclarations();
-  CGlobalDeclarations decls = null;
-  IDeclaration decl;
+{ 
+    CGlobalDeclarations result = new CGlobalDeclarations();
+    CGlobalDeclarations decls = null;
+    IDeclaration decl;
 }
-{ ( decl= Declaration() {result.add(decl);} |
-    decls = IncludedDeclarations() {result.addAll(decls);}
-  ) *
-  { return result;}
+{ 
+    ( 
+        decl= Declaration() {result.add(decl);} |
+        decls = IncludedDeclarations() {result.addAll(decls);}
+    ) *
+  
+    { return result;}
 }
 
 CProgram Program():
-{ CGlobalDeclarations decls ;
-  CInstructions instrs;
+{ 
+    CGlobalDeclarations decls ;
+    CInstructions instrs;
 }
-{   decls = GlobalDeclarations()
+{   
+    decls = GlobalDeclarations()
     instrs= Instructions() <EOF>
-  {return new CProgram(decls, instrs);}
+    {return new CProgram(decls, instrs);}
 }

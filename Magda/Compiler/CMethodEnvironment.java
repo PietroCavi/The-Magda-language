@@ -3,36 +3,39 @@ package Magda.Compiler;
 import Magda.ProgramTree.*;
 import Magda.ProgramTree.Declarations.*;
 
-public class CMethodEnvironment extends CEnvironment
-{
-  public CMixinDeclaration CurrentMixin;
+import java.io.Serializable;
 
-  public ITypeElement getTypeElement(String aName)
-  { ITypeElement res;
-    res = CurrentMixin.polyPars.findByName(aName);
-    if (res != null)
-      return res;
-    return getMixin(aName);
-  }
+public class CMethodEnvironment extends CEnvironment{
+    
+    public CMixinDeclaration CurrentMixin;
 
-  public IDeclaration getDeclaration(String name)
-  { IDeclaration res = null;
-    if (CurrentMixin != null)
-        res = CurrentMixin.polyPars.findByName(name);
-    if (res != null)
-      return res;
-    return super.getDeclaration(name);
-  }
+    public ITypeElement getTypeElement(String aName){ 
+        ITypeElement res;
+        res = CurrentMixin.polyPars.findByName(aName);
+        if (res != null)
+            return res;
+        return getMixin(aName);
+    }
 
-  public CMethodEnvironment(CEnvironment env, CMixinDeclaration aCurrentMixin)
-  { super(env.Decls, env.calculatedTypes);
-      CurrentMixin= aCurrentMixin;
-  }
+    public IDeclaration getDeclaration(String name){ 
+        IDeclaration res = null;
+        if (CurrentMixin != null)
+            res = CurrentMixin.polyPars.findByName(name);
+        if (res != null)
+            return res;
+    
+        return super.getDeclaration(name);
+    }
 
-  public CMethodEnvironment(CGlobalDeclarations adecls, CMixinDeclaration aCurrentMixin)
-  { super(adecls);
-      CurrentMixin= aCurrentMixin;
-  }
+    public CMethodEnvironment(CEnvironment env, CMixinDeclaration aCurrentMixin){ 
+        super(env.Decls, env.calculatedTypes);
+        CurrentMixin= aCurrentMixin;
+    }
+
+    public CMethodEnvironment(CGlobalDeclarations adecls, CMixinDeclaration aCurrentMixin){ 
+        super(adecls);
+        CurrentMixin= aCurrentMixin;
+    }
 
 
 };

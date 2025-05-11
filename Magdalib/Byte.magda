@@ -11,7 +11,7 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     % byte thisVal = ((Byte)aSelf.internalPointer).byteValue(); %;
     % byte otherVal = ((Byte)$other$.internalPointer).byteValue(); %;
     % byte resultingVal = (byte) (thisVal | otherVal); %;
-    % java.lang.Byte result = new java.lang.Byte(resultingVal); %;
+    % Byte result = (Byte)resultingVal; %;
     % $res$.internalPointer = result; %;
     return res;
   end;
@@ -23,7 +23,7 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     % byte thisVal = ((Byte)aSelf.internalPointer).byteValue(); %;
     % byte otherVal = ((Byte)$other$.internalPointer).byteValue(); %;
     % byte resultingVal = (byte) (thisVal & otherVal); %;
-    % java.lang.Byte result = new java.lang.Byte(resultingVal); %;
+    % Byte result = (Byte)resultingVal; %;
     % $res$.internalPointer = result; %;
     return res;
   end;
@@ -35,7 +35,7 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     % byte thisVal = ((Byte)aSelf.internalPointer).byteValue(); %;
     % byte otherVal = ((Byte)$other$.internalPointer).byteValue(); %;
     % byte resultingVal = (byte) (thisVal + otherVal); %;
-    % java.lang.Byte result = new java.lang.Byte(resultingVal); %;
+    % Byte result = (Byte)resultingVal; %;
     % $res$.internalPointer = result; %;
     return res;
   end;
@@ -47,7 +47,7 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     % byte thisVal = ((Byte)aSelf.internalPointer).byteValue(); %;
     % byte otherVal = ((Byte)$other$.internalPointer).byteValue(); %;
     % byte resultingVal = (byte) (thisVal - otherVal); %;
-    % java.lang.Byte result = new java.lang.Byte(resultingVal); %;
+    % Byte result = (Byte)resultingVal; %;
     % $res$.internalPointer = result; %;
     return res;
   end;
@@ -59,7 +59,7 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     % byte thisVal = ((Byte)aSelf.internalPointer).byteValue(); %;
     % byte otherVal = ((Byte)$other$.internalPointer).byteValue(); %;
     % byte resultingVal = (byte) (thisVal * otherVal); %;
-    % java.lang.Byte result = new java.lang.Byte(resultingVal); %;
+    % Byte result = (Byte)resultingVal; %;
     % $res$.internalPointer = result; %;
     return res;
   end;
@@ -71,14 +71,14 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     % byte thisVal = ((Byte)aSelf.internalPointer).byteValue(); %;
     % byte otherVal = ((Byte)$other$.internalPointer).byteValue(); %;
     % byte resultingVal = (byte) (thisVal / otherVal); %;
-    % java.lang.Byte result = new java.lang.Byte(resultingVal); %;
+    % Byte result = (Byte)resultingVal; %;
     % $res$.internalPointer = result; %;
     return res;
   end;
 
   new Object print()
   begin
-    % java.lang.Integer decValue = new Integer( java.lang.Integer.valueOf(((Byte)aSelf.internalPointer).toString(),10) ); %;
+    % java.lang.Integer decValue = Integer.valueOf(((Byte)aSelf.internalPointer).toString(),10) ; %;
     % if( decValue >= 0 ) { %;
     %   System.out.print( java.lang.Integer.toHexString( decValue.intValue() ) ); %;
     % } else { %;
@@ -99,8 +99,8 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     res:Boolean;
   begin
     res := new Boolean[];
-    % int result = ((java.lang.Byte)aSelf.internalPointer).compareTo((java.lang.Byte)$other$.internalPointer); %;
-    % if (result < 0) $res$.internalPointer = new Boolean(true); else $res$.internalPointer = new Boolean(false); %;
+    % int result = ((Byte)aSelf.internalPointer).compareTo((Byte)$other$.internalPointer); %;
+    % if (result < 0) $res$.internalPointer = (Boolean)true; else $res$.internalPointer = (Boolean)false; %;
     return res;
   end;
 
@@ -108,8 +108,8 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     res:Boolean;
   begin
     res := new Boolean[];
-    % int result = ((java.lang.Byte)aSelf.internalPointer).compareTo((java.lang.Byte)$other$.internalPointer); %;
-    % if (result <= 0) $res$.internalPointer = new Boolean(true); else $res$.internalPointer = new Boolean(false); %;
+    % int result = ((Byte)aSelf.internalPointer).compareTo((Byte)$other$.internalPointer); %;
+    % if (result <= 0) $res$.internalPointer = (Boolean)true; else $res$.internalPointer = (Boolean)false; %;
     return res;
   end;
 
@@ -125,7 +125,7 @@ mixin Byte of Comparable, where  Comparable.t := (Comparable, Byte) =
     res:Boolean;
   begin
     res := new Boolean[];
-    % if(aSelf.internalPointer.equals($other$.internalPointer) == false) $res$.internalPointer = new Boolean(true); else $res$.internalPointer = new Boolean(false); %;
+    % if(aSelf.internalPointer.equals($other$.internalPointer) == false) $res$.internalPointer = (Boolean)true; else $res$.internalPointer = (Boolean)false; %;
     return res;
   end;
 

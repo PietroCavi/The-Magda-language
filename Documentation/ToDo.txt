@@ -1,0 +1,101 @@
+1. Somma tra Float e String con valori costanti da entrambe le parti
+
+2. Valori costanti negli iniModules
+
+3. Mixin Exeption (Keyword throws (?))
+
+4. Rimozione di tutti i warning di compilazione del compiler           //DONE (*1) 
+
+5. Rimozione di tutti i warning di compilazione dei programmi generati //DONE
+
+6. Sostituzione dei Vector con ArrayList nel codice del compiler       //DONE
+
+7. Rendere più sintatticamente digestibile l'output MagdaProgram.java
+
+8. Verificare il funzionamento del plugin di Eclipse
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+9. Boolean, Integer, Float, Byte come Mixin nativi anzichè come libreria
+
+10. Gli iniModules sono un po' incasinati
+
+11. Forzare la specificazione del Mixin solo in caso di ambiguità effettiva con un opportuno warning in fase di compilazione
+
+12. Porting su OCaml pericoloso visto il grosso appoggio che Magda fa su Java
+
+13. Implementazione con le Lambda espressioni dei CMagdaMethod
+
+
+
+Nell'immediato
+
+1. Somma tra Float e String con valori costanti da entrambe le parti
+
+2. Valori costanti negli iniModules
+
+Capitoli 3,4,5,(6!,7!,8,9,10,11),12
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log1 17/03/2025
+
+Rimossi un po' di Warning dalla compilazione, Tolto Vector, inserito ArrayList, e tolto un po' di warning relativi al serialUID
+da 31 warning a 26
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log2 18/03/2025
+
+Rimossi tutti i Warning relativi ai problemi di serializzazione!
+Da 26 warning siamo passati a 6 (tutti this-escape)
+
+la classe CMixinDeclaration non ha più un constructor public hp adottato lo stile static-factory per l'inizializzazione,
+così da rimuovere il this-escape ma mantenere la logica di creazione stabilita nella vecchia versione
+Ora per creare un'istanza di CMixinDeclaration bisognerà utilizzare CMixinDeclaration.createCMixinDeclaration(. . .)
+Da 6 warning a 5
+
+la classe COverrideMethodDeclaration non ha più ho un constructor public adottato lo stile static-factory per l'inizializzazione,
+così da rimuovere il this-escape ma mantenere la logica di creazione stabilita nella vecchia versione
+Ora per creare un'istanza di COverrideMethodDeclaration bisognerà utilizzare COverrideMethodDeclaration.createCOverrideMethodDeclaration(. . .)
+Da 5 warning a 4
+
+la classe CTypes non ha più un constructor public ho adottato lo stile static-factory per l'inizializzazione,
+così da rimuovere il this-escape ma mantenere la logica di creazione stabilita nella vecchia versione
+Ora per creare un'istanza di CType bisognerà utilizzare CType.createCType(. . .)
+Ho create 3 factory come mirror dei 3 vecchi costructor public
+Da 4 warning a 2
+
+Ho rimosso l'istruzione aPars.setMethod(this) dal constructor della classe astratta CInterfaceMethodDeclaration per evitare this-escape
+tuttavia è un'operazione importante, quindi bisogna ricordarsi di chiamarla nelle classi che estendono CInterfaceMethodDeclaration.
+In questo caso per le classi CNewMethodDeclaration e CAbstractMethodDeclaration ho messo il constructor a private per creare una
+static-factory, così posso creare gli ogetti facendo uso del constructor della classe astratta CInterfaceMethodDeclaration e poter chiamare
+aPars.setMethod(...) senza incorrere in this-exception
+
+la classe CNewMethodDeclaration non ha più un constructor public ho adottato lo stile static-factory per l'inizializzazione,
+così da rimuovere il this-escape ma mantenere la logica di creazione stabilita nella vecchia versione
+Ora per creare un'istanza di CType bisognerà utilizzare CNewMethodDeclaration.createCNewMethodDeclaration(. . .)
+
+la classe CAbstractMethodDeclaration non ha più un constructor public ho adottato lo stile static-factory per l'inizializzazione,
+così da rimuovere il this-escape ma mantenere la logica di creazione stabilita nella vecchia versione
+Ora per creare un'istanza di CType bisognerà utilizzare CAbstractMethodDeclaration.createCAbstractMethodDeclaration(. . .)
+
+Da 2 warning a 1
+
+L'ultimo warning è generato da javacc, ci sarebbe un fix facile, ovvero porre la classe ParserTokenManager nella directory del Parser a final,
+non c'è un modo per forzare javacc a farlo, perciò si può o modificare manualmente o scrivere uno script che faccia questa aggiunta prima di
+compilare l'intero progetto. Questa modifica la lascerò eventualmente per il futuro! (*1)
+
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log3 20/03/2025
+
+Rimossi tutti i warning di compilazione dei programmi Magda di Test presenti nel progetto.
+In particolare questi erano dovuti a cast ridondanti, tipi raw utilizzati nei Vector, piccoli warning del genere, sono riuscito a rimuoverli quasi tutti
+in maniera naturale risolvendoli, altri purtroppo non sono particolarmente risolvibili, in particolare in Vector e in Lzw, questi sono dovuti al
+fatto che mi salvo dei Vector nel contesto globale aSelf del mixin, ma aSelf è un oggetto, e quindi sono costretto a fare un cast unsafe
+da Object a Vector, il tutto è corretto ma genera un warning, questi ultimi non sono di facile risoluzione, ma essendo pochi li ho soppressi.
+In futuro si potrebbe provare a riscrivere le librerie di Vector, ma fare un safe cast farebbe perdere un sacco di performace a Vector, che è una
+classe decisamente troppo essenziale per essere lenta.
+

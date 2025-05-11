@@ -3,34 +3,31 @@ import Magda.ProgramTree.*;
 import Magda.ProgramTree.MixinExpressions.*;
 import Magda.Compiler.*;
 
-public class CByteLiteral implements IExpression
-{
-  byte Value;
+public class CByteLiteral implements IExpression{
+    
+    private static final long serialVersionUID = 1L;
+  
+    byte Value;
 
-  public CByteLiteral(byte aValue)
-  {
-    Value = aValue;
-  }
+    public CByteLiteral(byte aValue){
+        Value = aValue;
+    }
 
-  public void print(java.io.PrintStream o)
-  {
-    o.print(" byte:<"+Byte.toString(Value)+">");
-  }
+    public void print(java.io.PrintStream o){
+        o.print(" byte:<"+Byte.toString(Value)+">");
+    }
 
-  public CType GetType (CInstrEnvironment env)
-  {
-    return (new CMixinExpressionIdentifier("FullByte")).GetType(env) ;
-  }
+    public CType GetType (CInstrEnvironment env){
+        return (new CMixinExpressionIdentifier("FullByte")).GetType(env) ;
+    }
 
-  public String GetTypeString ()
-  {
-    return ("Byte");
-  }
+    public String GetTypeString (){
+        return ("Byte");
+    }
 
-  public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target)
-  {
-    new CObjectCreation(new CMixinExpressionIdentifier("FullByte"), new CInitializationOfParams()).GenCode(o, env, h, target);
-    o.println ( h.tempAcc(target)+ ".internalPointer = new Byte((byte)"+Value+");");
-  }
+    public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){
+        new CObjectCreation(new CMixinExpressionIdentifier("FullByte"), new CInitializationOfParams()).GenCode(o, env, h, target);
+        o.println ( h.tempAcc(target)+ ".internalPointer = (byte)"+Value+";");
+    }
 
 };

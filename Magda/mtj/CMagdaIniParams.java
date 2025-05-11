@@ -4,6 +4,8 @@ import java.util.*;
 
 public class CMagdaIniParams extends HashMap<String, CMagdaObject>
 { 
+    private static final long serialVersionUID = 1L;
+  
   private String PairToString(String MixinName, String ParamName)
   { return MixinName+" | "+ParamName;
   }

@@ -3,33 +3,34 @@ import Magda.ProgramTree.*;
 import Magda.Compiler.*;
 import Magda.ProgramTree.MixinExpressions.*;
 
-public class CFloatLiteral implements IExpression
-{
-  float  Value;
+public class CFloatLiteral implements IExpression{
+    
+    private static final long serialVersionUID = 1L;
+    
+    float  Value;
 
-  public CFloatLiteral (float aValue)
-  {
-    Value = aValue;
-  }
+    public CFloatLiteral (float aValue){
+        Value = aValue;
+    }
 
-  public CType GetType (CInstrEnvironment env)
-  {
-    return (new CMixinExpressionIdentifier("FullFloat")).GetType(env) ;
-  }
+    public CType GetType (CInstrEnvironment env){
+        return (new CMixinExpressionIdentifier("FullFloat")).GetType(env) ;
+    }
 
-  public String GetTypeString ()
-  {
-    return ("Float");
-  }
+    public String GetTypeString (){
+        return ("Float");
+    }
 
-  public void print(java.io.PrintStream o)
-  {
-    o.print(" float:<"+String.valueOf(Value)+">");
-  }
+    public void print(java.io.PrintStream o){
+        o.print(" float:<"+String.valueOf(Value)+">");
+    }
 
-   public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target)
-   {   new CObjectCreation(new CMixinExpressionIdentifier("FullFloat"), new CInitializationOfParams()).GenCode(o, env, h, target);
-     o.println ( h.tempAcc(target)+ ".internalPointer = new Float("+Value+");");
-   }
+    public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){   
+        new CObjectCreation(new CMixinExpressionIdentifier("FullFloat"), new CInitializationOfParams()).GenCode(o, env, h, target);
+        //OLD VERSION
+        //o.println ( h.tempAcc(target)+ ".internalPointer = new Float("+Value+");");
+        //NEW VERSION
+        o.println ( h.tempAcc(target)+ ".internalPointer = Float.valueOf((float)"+Value+");");
+    }
 
 };

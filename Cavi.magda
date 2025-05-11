@@ -1,0 +1,84 @@
+include "Magdalib/Object.magda";
+include "Magdalib/Boolean.magda";
+include "Magdalib/Integer.magda";
+include "Magdalib/Comparable.magda";
+include "Magdalib/Float.magda";
+include "Magdalib/String.magda";
+include "Magdalib/ByteVector.magda";
+include "Magdalib/Vector.magda";
+include "Magdalib/Byte.magda";
+
+mixin Mix1 of Object =
+    new void print()
+    begin
+        "Mix1\n".String.print();
+    end;
+
+    new void printM1(m1:Mix1)
+    begin
+        "Mix1 -- m1\n".String.print();
+    end;
+
+end;
+
+mixin Mix2 of Object =
+    new void print()
+    begin
+        "Mix2\n".String.print();
+    end;
+end;
+
+mixin Mix3 of Mix1,Mix2 =
+    
+    new Mix3 method( m1:Mix1 ; m2:Mix2)
+    begin
+        return (new Mix1,Mix2,Mix3[]);
+    end;
+
+    new void print()
+    begin
+        "Mix3\n".String.print();
+    end;
+
+    override void Mix1.print()
+    begin
+        "Mix3 vo Mix1\n";
+    end;
+    
+    override void Mix2.print()
+    begin
+        "Mix3 vo Mix2\n";
+    end;
+
+    new String getFloat()
+    begin
+        return "Hello";
+    end;
+    
+end;
+
+mixin MainClass of Object = 
+    
+    new void mainProgram()
+    
+        k : Mix3;   
+        int : Mix3;        
+        s : Float;
+
+    begin
+
+        k := new Mix1,Mix2,Mix3[];    
+        k.Mix1.print();
+        k.Mix2.print();
+        k.Mix3.print();
+        
+        int := k.Mix3.method(new Mix1[], new Mix2[]);
+
+        (new Mix1[]).Mix1.printM1(int);
+
+        s:=k.Mix3.getFloat();
+
+    end;
+end;
+
+(new MainClass[]).MainClass.mainProgram();

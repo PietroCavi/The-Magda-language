@@ -1,5 +1,9 @@
 package Magda.ProgramTree;
 
-public interface IProgramElem
-{ public void print(java.io.PrintStream o);
+import java.io.Serializable;
+
+public interface IProgramElem extends Serializable{ 
+
+    public void print(java.io.PrintStream o);
+
 };

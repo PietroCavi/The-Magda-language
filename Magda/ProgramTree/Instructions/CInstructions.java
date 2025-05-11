@@ -4,17 +4,18 @@ import Magda.Compiler.*;
 
 import java.util.*;
 
-public class CInstructions extends CProgramElemVector<IInstruction>
-{
+public class CInstructions extends CProgramElemVector<IInstruction>{
 
-	public void CheckTypes (CInstrEnvironment env)
-	{ for (int i=0; i<size();  i++)
-		get(i).CheckTypes(env);
+    private static final long serialVersionUID = 1L;
+	
+    public void CheckTypes (CInstrEnvironment env){ 
+        for (int i=0; i<size();  i++)
+		    get(i).CheckTypes(env);
 	}
 
-	public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h)
-	{ for (int i=0; i<size();  i++)
-		get(i).GenCode(o, env, h);
+	public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h){ 
+        for (int i=0; i<size();  i++)
+		    get(i).GenCode(o, env, h);
 	}
 
 }

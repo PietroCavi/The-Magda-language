@@ -4,7 +4,7 @@ mixin Vector of Object =
   required Vector(size:Integer) initializes ()
   begin
     % int initSize = ((Integer)$size$.internalPointer).intValue(); %;
-    % java.util.Vector vectObj = new java.util.Vector(initSize); aSelf.internalPointer = vectObj; %;
+    % java.util.Vector<Object> vectObj = new java.util.Vector<Object>(initSize); aSelf.internalPointer = vectObj; %;
     super[];
   end;
 
@@ -12,17 +12,18 @@ mixin Vector of Object =
     len:Integer;
   begin
     len := 0;
-    % int res = ((java.util.Vector)aSelf.internalPointer).size(); Integer intObj = new Integer(res); $len$.internalPointer = (Integer)intObj; %;
+    % int res = ((java.util.Vector)aSelf.internalPointer).size(); Integer intObj = res; $len$.internalPointer = intObj; %;
     return len;
   end;
 
   new void set(index:Integer; elem:Object)
   begin
     % int paramIndex = ((Integer)$index$.internalPointer).intValue(); %;
+    % @SuppressWarnings("unchecked") java.util.Vector<Object> e = (java.util.Vector<Object>)aSelf.internalPointer; %;
     % try { %;
-    % ((java.util.Vector)aSelf.internalPointer).set(paramIndex, (java.lang.Object)$elem$.internalPointer); %;
+    % e.set(paramIndex, $elem$.internalPointer); %;
     % } catch(java.lang.ArrayIndexOutOfBoundsException aioobe) { %;
-    % ((java.util.Vector)aSelf.internalPointer).add(paramIndex, (java.lang.Object)$elem$.internalPointer); %;
+    % e.add(paramIndex, $elem$.internalPointer); %;
     % } %;
   end;
 
@@ -32,7 +33,7 @@ mixin Vector of Object =
     res := new Object[];
     % int paramIndex = ((Integer)$index$.internalPointer).intValue(); %;
     % java.lang.Object result = ((java.util.Vector)aSelf.internalPointer).get(paramIndex); %;
-    % $res$.internalPointer = (Object)result; %;
+    % $res$.internalPointer = result; %;
     return res;
   end;
 

@@ -3,34 +3,34 @@ import Magda.ProgramTree.*;
 import Magda.ProgramTree.MixinExpressions.*;
 import Magda.Compiler.*;
 
-public class CIntegerLiteral implements IExpression
-{
-  int Value;
+public class CIntegerLiteral implements IExpression{
+    
+    private static final long serialVersionUID = 1L;
+  
+    int Value;
 
-  public CIntegerLiteral (int aValue)
-  {
-    Value = aValue;
-  }
+    public CIntegerLiteral (int aValue){
+        Value = aValue;
+    }
 
-  public void print(java.io.PrintStream o)
-  {
-    o.print(" int:<"+String.valueOf(Value)+">");
-  }
+    public void print(java.io.PrintStream o){
+        o.print(" int:<"+String.valueOf(Value)+">");
+    }
 
-  public CType GetType (CInstrEnvironment env)
-  {
-    return (new CMixinExpressionIdentifier("FullInteger")).GetType(env) ;
-  }
+    public CType GetType (CInstrEnvironment env){
+        return (new CMixinExpressionIdentifier("FullInteger")).GetType(env) ;
+    }
 
-  public String GetTypeString ()
-  {
-    return ("Integer");
-  }
+    public String GetTypeString (){
+        return ("Integer");
+    }
 
-  public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target)
-  {
-    new CObjectCreation(new CMixinExpressionIdentifier("FullInteger"), new CInitializationOfParams()).GenCode(o, env, h, target);
-    o.println ( h.tempAcc(target)+ ".internalPointer = new Integer("+Value+");");
-  }
+    public void GenCode (java.io.PrintStream o, CInstrEnvironment env, CGenCodeHelper h, int target){
+        new CObjectCreation(new CMixinExpressionIdentifier("FullInteger"), new CInitializationOfParams()).GenCode(o, env, h, target);
+        //OLD VERSION
+        //o.println ( h.tempAcc(target)+ ".internalPointer = new Integer("+Value+");");
+        //NEW VERSION
+        o.println ( h.tempAcc(target)+ ".internalPointer = (Integer)"+Value+";");
+    }
 
 };

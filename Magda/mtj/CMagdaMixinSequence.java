@@ -3,7 +3,7 @@ package Magda.mtj;
 import java.util.*;
 
 public class CMagdaMixinSequence
-{   Vector<CMagdaMixin> arr = new Vector<CMagdaMixin>();
+{   ArrayList<CMagdaMixin> arr = new ArrayList<CMagdaMixin>();
     
     String getTypeName()
     { String res="[";
@@ -37,7 +37,7 @@ public class CMagdaMixinSequence
 
 	public Object clone() throws CloneNotSupportedException
 	{ CMagdaMixinSequence res = (CMagdaMixinSequence) super.clone();
-	  res.arr = (Vector<CMagdaMixin>)arr.clone();
+	  res.arr = new ArrayList<CMagdaMixin>(arr);
 	  return res;
 	}
 
