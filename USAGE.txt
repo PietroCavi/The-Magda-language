@@ -1,109 +1,105 @@
 
-Last update on: 20/03/2012
+Last update on: 12/05/2025
 
 
 -----------------------------------------------------------------------------
 
-Copyright (C) 2011 Jarek Kusmierek, Mauro Mulatero, Marco Naddeo
+Copyright (C) 2011 Jarek Kusmierek, Mauro Mulatero, Marco Naddeo, Pietro Cavicchioli
   Licensed to to the public under the Academic Free License version 3.0
   For further information see http://sourceforge.net/projects/magdalanguage/
 
 -----------------------------------------------------------------------------
 
 
-No installations are needed. In order to use the Magda language simply place
-this "mtj" tree in the computer media and call "compile" and "execute" as
-explained later.
-This Magda language prototype uses Java classes (java 1.5) included inside this "mtj"
-package and no specific configurations for Magda are needed; anyway is necessary that the 
-pc used contains the Java Sun JDK platform installed and working.
+No installations are needed. You can just clone this repository, install the dependencies
+and you can start tinkering with the language by following this file instructions.
 
-Just as an example main environment variable should be something like:
-**********************************************************************
-rem
-rem Copyright 2004-2005 Sun Microsystems, Inc. All rights reserved.
-rem Use is subject to license terms.
-rem
+This Magda language prototype uses Java classes included inside this "mtj"
+package and no specific configurations for Magda are needed, you will oly need the 
+following dependencies:
 
-set AS_ANT=C:\Sun\AppServer\lib\ant
-set AS_ANT_LIB=C:\Sun\AppServer\lib\ant\lib
-set AS_POINTBASE=C:\Sun\AppServer\pointbase
-set AS_POINTBASE_SAMPLESDB=C:\Sun\AppServer\pointbase
-set AS_WEBSERVICES_LIB=C:\Sun\AppServer\lib
-set AS_PERL=C:\Sun\AppServer\lib\perl
-set AS_NSS=C:\Sun\AppServer\lib
-set AS_NSS_BIN=C:\Sun\AppServer\lib
-set AS_IMQ_LIB=C:\Sun\AppServer\imq\lib
-set AS_IMQ_BIN=C:\Sun\AppServer\imq\bin
-set AS_CONFIG=C:\Sun\AppServer\config
-set AS_INSTALL=C:\Sun\AppServer
-set AS_JAVA=C:\Sun\AppServer\jdk
-set AS_ACC_CONFIG=C:\Sun\AppServer\domains\domain1\config\sun-acc.xml
-set AS_JHELP=C:\Sun\AppServer\lib
-set AS_ICU_LIB=C:\Sun\AppServer\bin
-set AS_DEF_DOMAINS_PATH=C:\Sun\AppServer\domains
-set AS_JDMK_HOME=C:\Sun\AppServer\lib\SUNWjdmk\5.1
-set AS_NATIVE_LAUNCHER=true
-set AS_NATIVE_LAUNCHER_LIB_PREFIX=\jre\bin\client
-set AS_WEBCONSOLE_LIB=C:\Sun\AppServer\lib
-set AS_JATO_LIB=C:\Sun\AppServer\lib
-set AS_HADB=%HADB_HOME%
+A JDK for Java 23 (or later, Java is backwards compatible) so that you can use 'javac' to compile
+    - It can be istalled with the oracle installer that you can find here: https://www.oracle.com/java/technologies/javase/jdk23-archive-downloads.html
+    - Or with your package manager of choice if the package is available
 
-set CLASSPATH=%CLASSPATH%;.
-
-path = C:\Sun\AppServer\jdk\bin;%path%
-**********************************************************************
-In this example the Java Sun JDK is installed in C:\
+And JavaCC 7.0.12 or later
+    - It can be installed by following the official instructions here: https://javacc.github.io/javacc/
+    - Or with your package manager of choice if the package is available
 
 
-This Magda milestone is built and checked on a Windows XP based machine.
-Maybe is possible to test the language also in other O.S. with little 
-modifications at the script level (not available at the moment).
+This Magda milestone is built and checked on a Linux based machine (Debian 12).
+But it has also been tested on a MacBook air M1 with macOS 15 Sequoia and on a
+Windows 10 machine.
+
+On Windows 10 there may be a few warning while building the compiler, they are due
+to the javacc generated code.
+
+-----------------------------------------------------------------------------
+
+Building or cleaning the project:
+
+To build the project type:
+    Windows:
+        .\make.bat
+
+    Linux/macOS:
+        bash make.bat
+
+To remove all the compiled code
+    Windows:
+        .\clean.bat
+
+    Linux/macOS:
+        bash clean.bat
 
 
 -----------------------------------------------------------------------------
 
-
-All sample user programs are present (and must be) in the path \mtj\Magda\src\...
+All sample user programs are present (and must be) in the path ./Magda/src/...
 
 To compile a program, from command prompt, type:
-  compile ProgramName
+    Windows
+        .\compile.bat ProgramName
+    
+    Linux/macOS
+        bash compile.bat ProgramName 
+
 Note: ProgramName without extension
 
-Example: to compile the program MagdaTest.magda in \mtj type:
-  compile MagdaTest
+Example: to compile the program MagdaTest.magda in the main directory type:
+    Windows
+        .\compile.bat MagdaTest 
+    
+    Linux/macOS
+        bash compile.bat MagdaTest 
   
 To execute a program, from command prompt, type: 
-  execute ProgramName
+    Windows
+        .\execute.bat ProgramName 
+    
+    Linux/macOS
+        bash execute.bat ProgramName 
+
 Note: ProgramName without extension
 
-Example: to execute the program MagdaTest.magda in \mtj type:
-  execute MagdaTest
+Example: to execute the program MagdaTest.magda in the main directory type:
+    Windows
+        .\execute.bat MagdaTest 
+    
+    Linux/macOS
+        bash execute.bat MagdaTest 
 
 
 -------
 
 NOTES: Any new program must be created in a folder with the same name of the
        Magda program that contains the 'main' and must be placed inside the
-       path: \mtj\Magda\src\...
-       With 'main' we intend the method that starts the computation, but this is
-       not necessarily called "main", as in Magda does not exist an "official" 
-       main method.
+       path: ./Magda/src/...
 
-       The program folder must contain a sub-folder named 'obj' that needs to
-       be created (empty) before compiling.
+       With 'main' we intend a method called 'mainProgram' contained in a Mixin
+       called 'MainClass', this method can't have any parameters!
 
-       All sample user program are present (and must be) in the path \mtj\Magda\src\...
-       
-       To rebuild the Magda language, if necessary and from command prompt, type:       
-         make
+       The program folder will contain a sub-folder named 'obj', it will be created
+       (if not already present), and it will contain the output of the Magda Compiler
 
-
-
-       
-       
-       
-       
-       
-       
-       
+       All sample user program are present (and must be) in the path ./Magda/src/...
