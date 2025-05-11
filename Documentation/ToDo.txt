@@ -803,3 +803,16 @@ Quindi ho aggiunto 2 righe all'interno dello script di building chiamato 'make.s
     sed -i -e '0,/class/s//final class/' ./Magda/PreParser/PreParserTokenManager.java 
 
 Queste due istanze di sed vengono eseguite dopo la generazione del codice java da parte di javacc ma prima della compilazione effettiva fatta con javac.
+
+/*----------------------------------------------------------------------------------------------------*/
+
+Log11 11/05/2025
+
+Ho aggiunto il supporto per Windows del compilatore Magda, traducendo i file bash in file batch eseguibili su Windows con lo stesso effetto.
+
+Poi ho accorpato i file .sh e i file .bat in file .bat poliglotti, e ho testato il tutto su diverse macchine, Linux, MacOS e Windows 10. Funziona tutto.
+
+Tuttavia su Windows rimangono diversi warning di compilazione dovuti al codice generato da JavaCC, ma non ho idea di come risolversi, non mi aspettavo che
+generasse codice diverso per Windows e per macchine Unix-like.
+
+
