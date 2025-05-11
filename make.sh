@@ -7,8 +7,8 @@ javacc -OUTPUT_DIRECTORY:"Magda/PreParser" Magda/PreParser/javacc_source/PrePars
 
 printf "\n"
 
+#this fixes the two warnings caused by Javacc 
+sed -i -e '0,/class/s//final class/' ./Magda/Parser/ParserTokenManager.java 
+sed -i -e '0,/class/s//final class/' ./Magda/PreParser/PreParserTokenManager.java 
+
 javac Magda/ProgramTree/Declarations/*.java Magda/ProgramTree/MixinExpressions/*.java Magda/ProgramTree/Expressions/*.java Magda/ProgramTree/Instructions/*.java Magda/ProgramTree/LValues/*.java Magda/ProgramTree/*.java Magda/mtj/*.java Magda/PreParser/*.java Magda/PreParser/PreParserStructures/*.java Magda/Parser/*.java Magda/Compiler/*.java -Xlint
-
-printf "\n"
-
-# java Magda.Parser.Parser <Example.Magda

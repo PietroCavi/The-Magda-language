@@ -14,13 +14,34 @@ mixin Vec3 of Object =
     y:Float;
     z:Float;
 
-    required Vec3(x:Float ; y:Float ; z:Float) initializes ()
+    optional Vec3(x:Integer) initializes()
     begin
+    
+        super[];
         
+    end;
+
+    required Vec3(x:Float ; y:Float ; z:Float) initializes ()
+        str : String;
+    begin
+
+        //str := "\nIni module di Vec3\n";
+    
+        //\str.String.print();
+        
+        //this.Vec3.x := x;
+        //this.Vec3.x := 2.0;
+        
+        /*
+        this.Vec3.y = y;
+        this.Vec3.z = z;        
+        */
+             
         this.Vec3.setX(x);
+        
         this.Vec3.setY(y);
         this.Vec3.setZ(z);
-    
+            
         super[];
     end;
 
@@ -215,7 +236,6 @@ mixin MainClass of void =
 
         "\nCiao, funziona\n".print();
         1.print();
-
 
     end;
 end;

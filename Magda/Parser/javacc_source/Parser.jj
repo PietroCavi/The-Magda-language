@@ -176,9 +176,9 @@ ILValue FieldContext(String mixinname):
         
             HashSet<String> controls = programContext.containsUnambiguousField(mixinname,t1.image);
             if(controls.size() > 1)
-                throw new Error("ambiguous field for mixin of type "+mixinname+" "+controls);
+                throw new Error("Parse Error: <THIS> ambiguous field for mixin of type "+mixinname+"at line:"+t1.beginLine+", possible mixins with such method:"+controls);
             else if(controls.size() == 0)
-                throw new Error("No field named "+t1.image+" for mixin of type "+mixinname);
+                throw new Error("Parse Error: <THIS> No field named "+t1.image+" for mixin of type "+mixinname+" at line:"+t1.beginLine);
 
             String[] unambiguousMixin = controls.toArray(new String[0]);
             return new CFieldLValue(unambiguousMixin[0],t1.image);
