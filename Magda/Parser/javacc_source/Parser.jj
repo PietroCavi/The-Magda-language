@@ -1240,7 +1240,7 @@ CIniModuleSuperInstruction ModuleSuperCall():
     <SUPER> "[" params=ActualInitializationOfParams() "]" ";" {return new CIniModuleSuperInstruction(params);}
 }
 
-CIniModuleBody IniModuleBody():
+CIniModuleBody IniModuleBody(String mixinname):
 { 
     CVariableDeclarations vars;
     CInstructions instrs, instrs2;
@@ -1265,7 +1265,7 @@ CIniModuleBody IniModuleBody():
 }
 
 
-CIniModuleDeclaration IniModuleDeclaration():
+CIniModuleDeclaration IniModuleDeclaration(String mixinname):
 { 
     Token MixinName;
     CSourceInitializationParameters input, output;
@@ -1279,7 +1279,7 @@ CIniModuleDeclaration IniModuleDeclaration():
     input = InputInitializationParameters(MixinName.image) <INITIALIZES> 
     output = OutputInitializationParameters()
 
-    Body = IniModuleBody()
+    Body = IniModuleBody(mixinname)
 
     { return new CIniModuleDeclaration(isRequired, MixinName.image, input, output, Body, LineNo, FileName);}
  
@@ -1390,7 +1390,7 @@ IDeclaration MixinDeclaration():
                 
                 |
            
-                iniModule = IniModuleDeclaration() {iniModules.add(iniModule);}
+                iniModule = IniModuleDeclaration(mixinname.image) {iniModules.add(iniModule);}
            ) ";"
         ) *
     <END> 

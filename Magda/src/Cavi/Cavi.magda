@@ -25,19 +25,19 @@ mixin Vec3 of Object =
         str : String;
     begin
 
-        //str := "\nIni module di Vec3\n";
+        str := "\nIni module di Vec3\n";
     
-        //\str.String.print();
+        str.String.print();
         
-        //this.Vec3.x := x;
-        //this.Vec3.x := 2.0;
+        this.Vec3.x := x;
+        this.Vec3.x := 2.0;
         
         /*
         this.Vec3.y = y;
         this.Vec3.z = z;        
         */
              
-        this.Vec3.setX(x);
+        //this.Vec3.setX(x);
         
         this.Vec3.setY(y);
         this.Vec3.setZ(z);

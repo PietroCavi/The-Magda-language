@@ -54,17 +54,17 @@ public class CObjectCreation implements IExpression{
         for (int i=0; i<Init.size(); i++){ 
             int temp = h.getTemp();
             Init.get(i).Expr.GenCode(o, env, h, temp);
-            IniParamsSetter += "IniParams.putParamValue(\""+Init.get(i).MixinName+"\",\""+Init.get(i).ParamName+"\","+h.tempAcc(temp)+");\n";
+            IniParamsSetter += "IniParamsObjectCreation.putParamValue(\""+Init.get(i).MixinName+"\",\""+Init.get(i).ParamName+"\","+h.tempAcc(temp)+");\n";
         }
       
-        o.println("{CMagdaIniParams IniParams = new CMagdaIniParams();");
+        o.println("{CMagdaIniParams IniParamsObjectCreation = new CMagdaIniParams();");
         o.print(IniParamsSetter);
 
         o.println("CMagdaIniModules modules = new CMagdaIniModules();");
         int modulecount=MixinExpr.GetType(env).GenCodeForActivatedModules(o, env, h, Init);
         if (modulecount>0){ 
             o.println("CMagdaIniModule firstModule = modules.remove(0);");
-            o.println("firstModule.Execute("+h.tempAcc(target)+",modules, IniParams);");
+            o.println("firstModule.Execute("+h.tempAcc(target)+",modules, IniParamsObjectCreation);");
         }
         o.println("}");
 

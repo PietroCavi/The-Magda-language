@@ -1,6 +1,6 @@
 1. Somma tra Float e String con valori costanti da entrambe le parti   //FATTO
 
-2. Valori costanti negli iniModules                                    //DA FARE
+2. Valori costanti negli iniModules                                    //FATTO
 
 3. Mixin Exeption (Keyword throws (?))                                 //DA FARE
 
@@ -29,8 +29,6 @@
 
 
 Nell'immediato:
-
-    2. Valori costanti negli iniModules
 
 Capotoli utili della tesi di Jarek:
     

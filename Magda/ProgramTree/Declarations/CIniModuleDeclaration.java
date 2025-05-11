@@ -66,7 +66,7 @@ public class CIniModuleDeclaration  implements IProgramElem{
             CIniModuleDeclaration mod =env.CurrentMixin.IniModules.get(i);
             if (mod != this)
                 for (int j=0; j<InputParams.size(); j++)
-                    if (mod.InputParams.containsParam(InputParams.get(j).MixinName, InputParams.get(j).ParName ) )
+                    if(mod.InputParams.containsParam(InputParams.get(j).MixinName, InputParams.get(j).ParName ))
                         throw new CTypeError("Input parameter "+InputParams.get(j).MixinName +"."+InputParams.get(j).ParName+ " is declared in two different modules");
               
         }
