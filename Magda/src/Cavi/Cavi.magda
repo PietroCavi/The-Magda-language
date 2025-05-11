@@ -26,54 +26,56 @@ mixin Vec3 of Object =
 
     new void setX(in:Float)
     begin
-        this.Vec3.x := in;
+        this.x := in;
     end;
     
     new void setY(in:Float)
     begin
-        this.Vec3.y := in;
+        this.y := in;
     end;
     
     new void setZ(in:Float)
     begin
-        this.Vec3.z := in;
+        this.z := in;
     end;
 
-    new Vec3 add(v:Object)
+    new Vec3 add(v:Vec3)
     begin
-        return (new Vec3[Vec3.x:=this.Vec3.x + v.Vec3.x,Vec3.y:=this.Vec3.y + v.Vec3.y,Vec3.z:=this.Vec3.z + v.Vec3.z]);
+        return (new Vec3[Vec3.x:=this.x + v.x,Vec3.y:=this.y + v.y,Vec3.z:=this.z + v.z]);
     end;
     
     new Vec3 sub(v:Vec3)
     begin
-        return (new Vec3[Vec3.x:=this.Vec3.x - v.Vec3.x,Vec3.y:=this.Vec3.y - v.Vec3.y,Vec3.z:=this.Vec3.z - v.Vec3.z]);
+        return (new Vec3[Vec3.x:=this.x - v.x,Vec3.y:=this.y - v.y,Vec3.z:=this.z - v.z]);
     end;
     
     new Vec3 multiply(v:Vec3)
     begin
-        return (new Vec3[Vec3.x:=this.Vec3.x * v.Vec3.x,Vec3.y:=this.Vec3.y * v.Vec3.y,Vec3.z:=this.Vec3.z * v.Vec3.z]);
+        return (new Vec3[Vec3.x:=this.x * v.x,Vec3.y:=this.y * v.y,Vec3.z:=this.z * v.z]);
     end;
     
     new Vec3 divide(v:Vec3)
     begin
-        return (new Vec3[Vec3.x:=this.Vec3.x / v.Vec3.x,Vec3.y:=this.Vec3.y / v.Vec3.y,Vec3.z:=this.Vec3.z / v.Vec3.z]);
+        return (new Vec3[Vec3.x:=this.x / v.x,Vec3.y:=this.y / v.y,Vec3.z:=this.z / v.z]);
     end;
     
     override Boolean Object.equals(v:Object)
     begin
-        return this.Vec3.x.Object.equals(v.Vec3.x).Boolean.and(this.Vec3.y.Object.equals(v.Vec3.y).Boolean.and(this.Vec3.z.Object.equals(v.Vec3.z))); 
+        // Qui devo specificare Vec3 su v perchè per il compiler ovviamente V è un Object e non un Vec3
+        // quindi non ha il field Object, e io effettuo una sorta di Cast a Vec3 specificandolo
+        return this.x.equals(v.Vec3.x).and(this.y.equals(v.Vec3.y).and(this.z.equals(v.Vec3.z))); 
     end;
 
     new void print()
     begin
 
-        "[".String.print();
-        this.Vec3.x.Float.print();
-        ",".String.print();
-        this.Vec3.y.Float.print();
-        ",".String.print();
-        this.Vec3.z.Float.print();
-        "]".String.print();
+        "[".print();
+        this.x.print();
+        ",".print();
+        this.y.print();
+        ",".print();
+        this.z.print();
+        "]".print();
     end;
 
 end;
@@ -164,8 +166,15 @@ mixin MainClass of void =
         //k.Mix2.print();
         //k.Mix3.print();       
 
-        this.MainClass.f3 := 1.0;
+        "\nf3 MainClass:".print();
+        this.f3 := 1.0;
         this.f3.print();
+
+        "\nf3 MainClass:".String.print();
+        this.MainClass.f3 := 3.0;
+        this.MainClass.f3.Float.print();
+
+        "\n".print();
 
         int := k.Mix3.method(new Mix1[], new Mix1,Mix2[]);
       

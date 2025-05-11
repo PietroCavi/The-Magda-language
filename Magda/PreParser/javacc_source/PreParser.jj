@@ -122,8 +122,22 @@ ILValue Field():
     Token t1, t2; 
 }
 {
-    <THIS> "." t1=<ID> "." t2= <ID>
-    { return new CFieldLValue(t1.image, t2.image); } 
+    (
+        LOOKAHEAD(6)
+        <THIS> "." t1=<ID> "." t2= <ID>
+        { 
+            return new CFieldLValue(t1.image, t2.image); 
+        }
+ 
+        |
+
+        <THIS> "." t1=<ID>
+        {
+        
+            return new CFieldLValue("Not important here",t1.image);
+
+        }
+    )
 }
 
 ILValue Variable():

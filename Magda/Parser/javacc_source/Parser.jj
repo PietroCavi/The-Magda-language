@@ -156,6 +156,37 @@ TOKEN :
 
 
 /* ----------------- LValues -------------------------*/
+
+ILValue FieldContext(String mixinname):
+{ 
+    Token t1, t2; 
+}
+{
+    (
+        LOOKAHEAD(6)
+        <THIS> "." t1=<ID> "." t2= <ID>
+        { 
+            return new CFieldLValue(t1.image, t2.image); 
+        }
+ 
+        |
+
+        <THIS> "." t1=<ID>
+        {
+        
+            HashSet<String> controls = programContext.containsUnambiguousField(mixinname,t1.image);
+            if(controls.size() > 1)
+                throw new Error("ambiguous field for mixin of type "+mixinname+" "+controls);
+            else if(controls.size() == 0)
+                throw new Error("No field named "+t1.image+" for mixin of type "+mixinname);
+
+            String[] unambiguousMixin = controls.toArray(new String[0]);
+            return new CFieldLValue(unambiguousMixin[0],t1.image);
+
+        }
+    )
+}
+
 ILValue Field():
 { 
     Token t1, t2; 
@@ -172,6 +203,19 @@ ILValue Variable():
 { 
     t1=<ID>
     { return new CVariableLValue(t1.image); }
+}
+
+ILValue LValueContext(String mixinname):
+{
+    ILValue res;
+}
+{  
+    ( 
+        res = FieldContext(mixinname) |
+        res = Variable()
+    )
+    
+    {return res;}
 }
 
 ILValue LValue():
@@ -195,7 +239,7 @@ CInstruction AssignmentContext(String mixinname,String methodname):
     ILValue lval;
 }
 { 
-    lval = LValue() ":=" expr = ExpressionContext(mixinname,methodname)
+    lval = LValueContext(mixinname) ":=" expr = ExpressionContext(mixinname,methodname)
     {return new CAssignment(lval, expr);}
 }
 
@@ -405,12 +449,168 @@ IExpression SuperExpression():
     <SUPER> list = ActualParameters() 
     { return new CSuperCallExpression(list);}
 }
-/*
-IExpression DirectMethodCallSuffixContext (String mixinname,String methodname,IExpression Target):
+
+IExpression DirectMethodCall(String mixinname,String methodname,IExpression Target):
 {
-    Token Method
+    Token MethodName;
+    CExpressionList list;
 }
-*/
+{
+        "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname)
+        {
+            
+            HashSet<String> controls = programContext.containsUnambiguousMethod(Target.GetTypeString(),MethodName.image);
+            if(controls.size() > 1)
+                throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls);
+            else if(controls.size() == 0)
+                throw new Error("No method named "+MethodName.image+" for mixin of type "+Target.GetTypeString());
+
+            String[] unambiguousMixin = controls.toArray(new String[0]);
+
+            return new CMethodCallExpression(Target, unambiguousMixin[0], MethodName.image, list,programContext.getMethodReturnType(unambiguousMixin[0],MethodName.image));
+        }
+
+}
+
+IExpression SpecificMethodCallOrSelectAndCall(String mixinname,String methodname,IExpression Target):
+{
+    Token FirstPart,MethodName;
+    CExpressionList list;
+    IExpression secondTarget;
+}
+{
+        "." FirstPart = <ID> "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname) 
+        { 
+            if(programContext.containsMixin(FirstPart.image)){
+                String typeString = programContext.getMethodReturnType(FirstPart.image,MethodName.image);
+                return new CMethodCallExpression(Target, FirstPart.image, MethodName.image, list,typeString);
+            }
+            
+            HashSet<String> controls = programContext.containsUnambiguousField(Target.GetTypeString(),FirstPart.image);
+            if(controls.size() > 1)
+                throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls);
+            else if(controls.size() == 0)
+                throw new Error("No field named "+FirstPart.image+" for mixin of type "+Target.GetTypeString());
+            else{
+                String[] unambiguousMixin = controls.toArray(new String[0]);
+                secondTarget = new CFieldSelectExpression(Target, unambiguousMixin[0], FirstPart.image, programContext.getFieldType(unambiguousMixin[0],FirstPart.image));
+
+
+                controls = programContext.containsUnambiguousMethod(secondTarget.GetTypeString(),MethodName.image);
+                if(controls.size() > 1)
+                    throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls);
+                else if(controls.size() == 0)
+                    throw new Error("No method named "+MethodName.image+" for mixin of type "+secondTarget.GetTypeString());
+                           
+
+                unambiguousMixin = controls.toArray(new String[0]);
+
+                return new CMethodCallExpression(secondTarget, unambiguousMixin[0], MethodName.image, list,programContext.getMethodReturnType(unambiguousMixin[0],MethodName.image));
+            }
+
+        } 
+}
+
+IExpression SpecificSelectOrMethodCall(String mixinname,String methodname,IExpression Target):
+{
+    Token FirstPart,SecondPart,MethodName;
+    CExpressionList list;
+    IExpression secondTarget;
+    
+}
+{
+    "." FirstPart = <ID> "." SecondPart = <ID> "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname)
+    {
+        if(programContext.containsMixin(FirstPart.image)){ //Specific Selection
+            String typeString = programContext.getFieldType(FirstPart.image,SecondPart.image);
+            secondTarget =  new CFieldSelectExpression(Target, FirstPart.image, SecondPart.image, typeString);
+            
+            HashSet<String> controls = programContext.containsUnambiguousMethod(secondTarget.GetTypeString(),MethodName.image);
+            if(controls.size() > 1)
+                throw new Error("ambiguous method for mixin of type "+Target.GetTypeString()+" "+controls);
+            else if(controls.size() == 0)
+                throw new Error("No method named "+MethodName.image+" for mixin of type "+secondTarget.GetTypeString());
+                       
+            String[] unambiguousMixin = controls.toArray(new String[0]);
+
+            return new CMethodCallExpression(secondTarget, unambiguousMixin[0], MethodName.image, list,programContext.getMethodReturnType(unambiguousMixin[0],MethodName.image));
+
+            
+
+        }
+        else{ //Specific methodCall
+            
+            HashSet<String> controls = programContext.containsUnambiguousField(Target.GetTypeString(),FirstPart.image);
+            if(controls.size() > 1)
+                throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls);
+            else if(controls.size() == 0)
+                throw new Error("No field named "+FirstPart.image+" for mixin of type "+Target.GetTypeString());
+            else{
+                String[] unambiguousMixin = controls.toArray(new String[0]);
+                secondTarget = new CFieldSelectExpression(Target, unambiguousMixin[0], FirstPart.image, programContext.getFieldType(unambiguousMixin[0],FirstPart.image));
+                
+                return new CMethodCallExpression(secondTarget,SecondPart.image,MethodName.image,list,programContext.getMethodReturnType(SecondPart.image,MethodName.image));
+            }
+        }        
+
+        return null;
+    }
+}
+
+IExpression SpecificSelectAndMethodCall(String mixinname,String methodname,IExpression Target):
+{
+    Token MixinName1,MixinName2,MethodName,FieldName;
+    CExpressionList list;
+    IExpression secondTarget;
+}
+{
+    "." MixinName1 = <ID> "." FieldName = <ID> "." MixinName2 = <ID> "." MethodName = <ID> list = ActualParametersContext(mixinname,methodname)
+    {
+        
+        String typeString = programContext.getFieldType(MixinName1.image,FieldName.image);
+        secondTarget = new CFieldSelectExpression(Target, MixinName1.image, FieldName.image, typeString);
+            
+        typeString = programContext.getMethodReturnType(MixinName2.image,MethodName.image);
+        return new CMethodCallExpression(secondTarget, MixinName2.image, MethodName.image, list,typeString);
+        
+        return null;
+    }
+}
+
+IExpression DirectSelect(String mixinname,String methodname,IExpression Target):
+{
+    Token FieldName;
+}
+{
+    "." FieldName = <ID>
+    {
+
+        HashSet<String> controls = programContext.containsUnambiguousField(Target.GetTypeString(),FieldName.image);
+        if(controls.size() > 1)
+            throw new Error("ambiguous field for mixin of type "+Target.GetTypeString()+" "+controls);
+        else if(controls.size() == 0)
+            throw new Error("No field named "+FieldName.image+" for mixin of type "+Target.GetTypeString());
+
+        String[] unambiguousMixin = controls.toArray(new String[0]);
+        System.out.println("// OIII " + unambiguousMixin[0] + "  " + FieldName.image);
+        return new CFieldSelectExpression(Target,unambiguousMixin[0],FieldName.image,programContext.getFieldType(unambiguousMixin[0],FieldName.image));
+    }
+}
+
+IExpression SpecificSelect(String mixinname,String methodname,IExpression Target):
+{
+    Token MixinName,FieldName;
+}
+{
+    "." MixinName = <ID> "." FieldName = <ID>
+    {
+        String typeString = programContext.getFieldType(MixinName.image,FieldName.image);
+        return new CFieldSelectExpression(Target, MixinName.image, FieldName.image, typeString);
+    }
+}
+
+///////
+
 IExpression MethodCallSuffixContext (String mixinname,String methodname,IExpression Target):
 { 
     Token MethodMixin, MethodName; 
@@ -450,6 +650,8 @@ IExpression MethodCallSuffixContext (String mixinname,String methodname,IExpress
     //    return ret;
     //}
 }
+
+///////
 
 IExpression MethodCallSuffix (IExpression Target):
 { 
@@ -548,9 +750,20 @@ IExpression BaseExpressionContext(String mixinname, String methodname):
     )  
     
     ( 
-        LOOKAHEAD(6) 
-        res = MethodCallSuffixContext (mixinname,methodname,res) |                                                               // Neanche troppoGesù
-        res = FieldSelectSuffixContext(mixinname,res)                                                                            // In teoria easy (?)
+        LOOKAHEAD(9) 
+        res = SpecificSelectAndMethodCall(mixinname,methodname,res) |
+        LOOKAHEAD(7) 
+        res = SpecificSelectOrMethodCall(mixinname,methodname,res) |
+        LOOKAHEAD(5) 
+        res = SpecificMethodCallOrSelectAndCall(mixinname,methodname,res) |
+        LOOKAHEAD(4) 
+        res = SpecificSelect(mixinname,methodname,res) |
+        LOOKAHEAD(3) 
+        res = DirectMethodCall(mixinname,methodname,res) |
+        LOOKAHEAD(2) 
+        res = DirectSelect(mixinname,methodname,res)
+        //res = MethodCallSuffixContext (mixinname,methodname,res) |                                                               // Neanche troppoGesù
+        //res = FieldSelectSuffixContext(mixinname,res)                                                                            // In teoria easy (?)
     )*
   
     { 
@@ -826,7 +1039,8 @@ IExpression ObjectCreationContext(String mixinname,String methodname):
 }
 { 
     <NEW> expr = MixinExpression() "[" initialization = ActualInitializationOfParamsContext(mixinname,methodname) "]"
-    { return new CObjectCreation(expr, initialization); }
+    { 
+        return new CObjectCreation(expr, initialization); }
 }
 
 IExpression ObjectCreation():

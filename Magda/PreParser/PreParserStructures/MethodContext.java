@@ -25,7 +25,12 @@ public class MethodContext{
     }
 
     public String getVariableType(String variableName){
-        return variables.get(variableName);
+
+        String ret = variables.get(variableName);
+        if(ret == null)
+            ret = params.get(variableName);
+
+        return ret;
     }
 
     public String toString(){

@@ -1,38 +1,51 @@
-1. Somma tra Float e String con valori costanti da entrambe le parti   //DONE
+1. Somma tra Float e String con valori costanti da entrambe le parti   //FATTO
 
-2. Valori costanti negli iniModules
+2. Valori costanti negli iniModules                                    //DA FARE
 
-3. Mixin Exeption (Keyword throws (?))
+3. Mixin Exeption (Keyword throws (?))                                 //DA FARE
 
-4. Rimozione di tutti i warning di compilazione del compiler           //DONE (*1) 
+4. Rimozione di tutti i warning di compilazione del compiler           //FATTO (*1) 
 
-5. Rimozione di tutti i warning di compilazione dei programmi generati //DONE
+5. Rimozione di tutti i warning di compilazione dei programmi generati //FATTO
 
-6. Sostituzione dei Vector con ArrayList nel codice del compiler       //DONE
+6. Sostituzione dei Vector con ArrayList nel codice del compiler       //FATTO
 
-7. Rendere più sintatticamente digestibile l'output MagdaProgram.java
+7. Rendere più sintatticamente digestibile l'output MagdaProgram.java  //DA FARE
 
-8. Verificare il funzionamento del plugin di Eclipse //NON NECESSARIO PER ORA
+8. Verificare il funzionamento del plugin di Eclipse                   //NON NECESSARIO PER ORA 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-9. Boolean, Integer, Float, Byte come Mixin nativi anzichè come libreria //NON UNA BUONA IDEA
+9. Boolean, Integer, Float, Byte come Mixin nativi anzichè come libreria                                          //NON UNA BUONA IDEA
 
-10. Gli iniModules sono un po' incasinati
+10. Gli iniModules sono un po' incasinati                                                                         //DA FARE
 
-11. Forzare la specificazione del Mixin solo in caso di ambiguità effettiva con un opportuno warning in fase di compilazione
+11. Forzare la specificazione del Mixin solo in caso di ambiguità con un opportuno errore in fase di compilazione //FATTO
 
-12. Porting su OCaml pericoloso visto il grosso appoggio che Magda fa su Java //FARE RICERCA PER PARLARNE
+12. Porting su OCaml pericoloso visto il grosso appoggio che Magda fa su Java                                     //FARE RICERCA PER PARLARNE NELLA TESI
 
-13. Implementazione con le Lambda espressioni dei CMagdaMethod //DONE
+13. Implementazione con le Lambda espressioni dei CMagdaMethod                                                    //FATTO
 
 
 
-Nell'immediato
+Nell'immediato:
 
-2. Valori costanti negli iniModules
+    2. Valori costanti negli iniModules
 
-Capitoli 3,4,5,(6!,7!,8,9,10,11),12
+Capotoli utili della tesi di Jarek:
+    
+    Capitoli 3,4,5,(6!,7!,8,9,10,11),12
+
+Note:
+    l'asterisco (*1) è trattato nel Log2
+    
+    il punto 8 è abbastanza obsoleto visto che il plugin andava perlopiù a risolvere il problema dell'ambiguità che ho risolto facendo il punto 11 della
+    lista, per quanto riguarda lo sviluppo e gli IDE ho comunque fatto qualcosina, ovvero 2 plugin molto rudimentali, uno per VsCode (e con le opportune
+    modifiche anche per tutti gli IDE che utilizzino TextMate per quanto riguarda l'editor) e uno per vim per avere l'highlight della sintassi per i file
+    con estensione '.magda'
+
+
+INIZIO DEI LOG
 
 /*----------------------------------------------------------------------------------------------------*/
 
@@ -292,47 +305,101 @@ Funzionano e anche se non sembra aiutano parecchio lo sviluppo e la leggibilità
 
 /*----------------------------------------------------------------------------------------------------*/
 
-Log6 05/04/2025
+Log6 05/04/2025 - 14/04/2025
 
-Controllare la non-ciclicità dei Mixin
+*Controllare la non-ciclicità dei Mixin*
 
-Controllare la non ambiguità di metodi e field
+    Un ipotetico controllo di ambiguità verrebbe Mandato in loop infinito da una possibile ciclicità dei Mixin, ovviamente la versione precedente del
+    compiler non prevedeva questo genere di dichiarazioni in fase di compilazione, ma io ho bisogno che questo controllo avvenga in fase di Parsing,
+    posso effettuare questo controllo sulla struttura dati che ho creato durante il log precedente, il ProgramContext.
+
+    Se ci sono mixin ciclici non proseguo con il Parsing, vediamo perchè sarebbe un problema!
+
+    es. 
+
+        this.print();
+
+    Ipotizziamo il mio this faccia riferimento ad mixin chiamato MyMixin, vediamo sotto una possibile dichiarazione problematica di MyMixin
+
+    -----
+
+    mixin MyMixin of Mix1,Mix2=
+        ...
+    end;
+
+    mixin Mix1 of Mix2=
+        ...
+    end;
+
+    mixin Mix2 of Mix2=
+        ...
+    end;
+
+    -----
+
+    Ipotizziamo ora che MyMixin non abbia nessun metodo new di nome print, ma Mix1 e Mix2 ce l'abbiano, quindi la chiamata this.print() sarebbe ambigua e
+    andrebbe disambiguata chiamando this.Mix1.print() o this.Mix2.print() (poi all'atto pratico per questioni di compilazione non avrei mai potuto
+    creare un'istanza di MyMixin, però la ciclicità a livello di dichiarazione è lecita).
+
+    In fase di parsing io controllo il tipo di this e verifico se esso contiene una dichiarazione non ambigua di this, e nel caso non ci fosse
+    voglio segnalare quali sono i Mixin specifici che contengono le definizioni non ambigue, però Mix1 e Mix2 continuerebbero a puntare a loro stessi
+    e andrei in LOOP!
+
+
+
+*Controllare la non ambiguità di metodi e field*
+
     putroppo dovrò creare dei nuovi metodi del parser, specialmente per i this, dovrò passare il mixinname del context in cui mi trovo!
 
+    I requisiti per eseguire il controllo di ambiguità sono: avere un ProgramContext e soprattutto avere un Parser che ci permetta di tradurre
+    correttamente i nuovi costruti che si andranno a formare!
 
+    Vediamo le possibilità che si andranno a creare e i nomi dei metodi creati che sono in grado di effettuare il Parsing nel modo corretto
 
+    -----
+    
+    /-------------------\
+    | I nuovi costrutti |
+    \-------------------/
 
+    1
+    | <Costrutto parsato precedentemente> . MixinName . Field . MixinName . method()
 
+    2
+    | <Costrutto parsato precedentemente> . MixinName . Field . method()
+    | <Costrutto parsato precedentemente> . Field . MixinName . method()
 
+    3
+    | <Costrutto parsato precedentemente> . MixinName . method()
+    | <Costrutto parsato precedentemente> . FieldName . method()
 
+    4
+    | <Costrutto parsato precedentemente> . MixinName . Field
 
+    5
+    | <Costrutto parsato precedentemente> . method() 
 
+    6
+    | <Costrutto parsato precedentemente> . Field
 
+    /----------\
+    | I Metodi |
+    \----------/
 
+    1. SpecificSelectAndMethodCall(...) 
 
+    2. SpecificSelectOrMethodCall(...)
 
+    3. SpecificMethodCallOrSelectAndCall(...)
 
+    4. SpecificSelect(...)
 
+    5. DirectMethodCall(...) 
 
+    6. DirectSelect(...)
 
+    -----
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    Quindi ho creato questi nuovi metodi del Parser che sfruttano il ProgramContext per riuscire a dire al compiler i Mixin corretti dei Field e delle
+    chiamate quando non ci sono ambiguità, e segnalano la presenza di ambiguità dando un errore altrimenti!
 
