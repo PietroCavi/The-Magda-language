@@ -33,16 +33,18 @@ public class ProgramContext{
 
         boolean res = false;        
 
-        for(String s : m.getLinkedMixins()){
-            if(s.equals("void"))
-                res = res || false;
-            else if(s.equals(mName)){
-                res = true;
-                break;
+        if(m!=null){
+            for(String s : m.getLinkedMixins()){
+                if(s.equals("void"))
+                    res = res || false;
+                else if(s.equals(mName)){
+                    res = true;
+                    break;
+                }
+                else
+                    res = res || checkForCyclesWrap(programContext.get(s),mName);
+                
             }
-            else
-                res = res || checkForCyclesWrap(programContext.get(s),mName);
-            
         }
 
         return res;        

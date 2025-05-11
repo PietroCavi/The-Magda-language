@@ -5,7 +5,7 @@ mixin MainClass of void =
 
     new void mainProgram()
     begin
-    
+        true.print(); 
     end;
 
 end;
